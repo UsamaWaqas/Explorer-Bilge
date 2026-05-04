@@ -1,17 +1,21 @@
 import { post } from "../api/apiHelper";
 import { useAuthStore } from "../store/authStore";
+import Toast from "react-native-toast-message";
 
 export const loginService = async (email: string, password: string) => {
   const response = await post(
-    '/api/users/login',
+    "/api/users/login",
     { email, password },
     {},
-    false // 👈 helper ka toast band — Login.tsx khud handle karega
+    false, 
   );
 
-  // ✅ Offline check — api call hi mat karo
   if (response?.isOffline) {
-    return { success: false, isOffline: true, message: 'No internet connection' };
+    return {
+      success: false,
+      isOffline: true,
+      message: "No internet connection",
+    };
   }
 
   if (response?.error) {
@@ -20,13 +24,25 @@ export const loginService = async (email: string, password: string) => {
 
   const token = response?.data?.token;
   const user = response?.data?.user;
+  const userDetail = response?.data?.userDetail;
+  console.log("Login Response:", response.data.userDetail);
 
   if (token && user) {
     await useAuthStore.getState().login({
       token,
-      refreshToken: token,
       user,
+      userDetail,
     });
+
+   
+    Toast.show({
+      type: "success",
+      text1: "Logged in Successfully",
+      text2: "Welcome to myARMIT! 👋",
+      position: "top",
+      visibilityTime: 3000,
+    });
+
     return { success: true };
   }
 

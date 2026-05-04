@@ -8,13 +8,15 @@ const axiosInstance = axios.create({
   baseURL: process.env.EXPO_PUBLIC_API_URL,
   headers: {
     'Content-Type': 'application/json',
+    'Origin': process.env.EXPO_PUBLIC_DOMAIN_URL,
+    'Referer': `${process.env.EXPO_PUBLIC_DOMAIN_URL}/`,
   },
 });
 
 // Request interceptor
 axiosInstance.interceptors.request.use(
   async config => {
-    // ✅ Check internet before every request
+    // Check internet before every request
     const netState = await NetInfo.fetch();
     if (!netState.isConnected) {
       // Reject silently with custom flag
@@ -34,7 +36,7 @@ axiosInstance.interceptors.request.use(
 axiosInstance.interceptors.response.use(
   response => response,
   async error => {
-    // ✅ Handle offline flag from request interceptor
+    //  Handle offline flag from request interceptor
     if (error?.isOffline) {
       return Promise.reject(error);
     }

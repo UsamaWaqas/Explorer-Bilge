@@ -45,7 +45,8 @@ const CustomDropdown: React.FC<CustomDropdownProps> = ({
   const [isOpen, setIsOpen] = useState(false);
 
   const selectedItem = data.find((item) => item.value === value);
-  const hasValue = value !== null && value !== undefined && selectedItem !== undefined;
+  const hasValue =
+    value !== null && value !== undefined && selectedItem !== undefined;
 
   const isActive = noFloatingLabel ? false : isOpen || hasValue;
 
@@ -76,13 +77,16 @@ const CustomDropdown: React.FC<CustomDropdownProps> = ({
   const borderWidth = isOpen ? 2 : 1;
 
   return (
-    <View className={compact ? "mt-1 mb-0" : "mt-2.5 mb-1.5"} style={style}>
+   
+    <View style={[{ marginTop: 0, marginBottom: compact ? 0 : 6 }, style]}>
 
       {/* Floating Label */}
       {!noFloatingLabel && (
         <Animated.Text
-          className="absolute    left-2.5 z-10"
           style={{
+            position: "absolute",
+            left: 10,
+            zIndex: 10,
             top: labelTop,
             fontSize: labelFontSize,
             color: isOpen ? "#1a73e8" : isActive ? "#6B7280" : "#9CA3AF",
@@ -97,8 +101,17 @@ const CustomDropdown: React.FC<CustomDropdownProps> = ({
 
       {/* Trigger Button */}
       <TouchableOpacity
-        className={`relative  rounded-md overflow-visible ${compact ? "h-10" : "h-12"} ${disabled ? "opacity-60" : ""}`}
-        style={{ borderWidth, borderColor }}
+        style={[
+          {
+            position: "relative",
+            borderRadius: 6,
+            overflow: "visible",
+            height: compact ? 32 : 40,
+            borderWidth,
+            borderColor,
+            opacity: disabled ? 0.6 : 1,
+          },
+        ]}
         onPress={() => !disabled && setIsOpen(true)}
         activeOpacity={0.7}
       >
@@ -120,24 +133,38 @@ const CustomDropdown: React.FC<CustomDropdownProps> = ({
 
         {/* Content Row */}
         <View
-          className={`flex-1 flex-row items-center justify-between ${compact ? "px-2" : "px-3"}`}
+          style={{
+            flex: 1,
+            flexDirection: "row",
+            alignItems: "center",
+            justifyContent: "space-between",
+            paddingHorizontal: compact ? 8 : 12,
+          }}
         >
           {hasValue ? (
             <Text
-              className={`flex-1 text-gray-800 ${compact ? "text-xs" : "text-sm"}`}
+              style={{
+                flex: 1,
+                color: "#1F2937",
+                fontSize: compact ? 12 : 14,
+              }}
               numberOfLines={1}
             >
               {selectedItem!.label}
             </Text>
           ) : noFloatingLabel ? (
             <Text
-              className={`flex-1 text-gray-400 ${compact ? "text-xs" : "text-sm"}`}
+              style={{
+                flex: 1,
+                color: "#9CA3AF",
+                fontSize: compact ? 12 : 14,
+              }}
               numberOfLines={1}
             >
               {placeholder}
             </Text>
           ) : (
-            <View className="flex-1" />
+            <View style={{ flex: 1 }} />
           )}
 
           <Ionicons
@@ -157,17 +184,36 @@ const CustomDropdown: React.FC<CustomDropdownProps> = ({
       >
         {/* Backdrop */}
         <TouchableOpacity
-          className="absolute inset-0"
+          style={{ position: "absolute", top: 0, bottom: 0, left: 0, right: 0 }}
           activeOpacity={1}
           onPress={() => setIsOpen(false)}
         >
-          <View className="absolute inset-0 bg-black/20" />
+          <View
+            style={{
+              position: "absolute",
+              top: 0,
+              bottom: 0,
+              left: 0,
+              right: 0,
+              backgroundColor: "rgba(0,0,0,0.2)",
+            }}
+          />
         </TouchableOpacity>
 
         {/* Options List */}
         <View
-          className="absolute left-[8%] right-[8%] top-[30%] bg-white rounded-lg overflow-hidden"
-          style={styles.shadow}
+          style={[
+            {
+              position: "absolute",
+              left: "8%",
+              right: "8%",
+              top: "30%",
+              backgroundColor: "white",
+              borderRadius: 8,
+              overflow: "hidden",
+            },
+            styles.shadow,
+          ]}
         >
           <FlatList
             data={data}
@@ -178,7 +224,13 @@ const CustomDropdown: React.FC<CustomDropdownProps> = ({
               const isSelected = item.value === value;
               return (
                 <TouchableOpacity
-                  className={`px-4 py-3.5 border-b border-gray-100 ${isSelected ? "bg-blue-50" : "bg-white"}`}
+                  style={{
+                    paddingHorizontal: 16,
+                    paddingVertical: 14,
+                    borderBottomWidth: 1,
+                    borderBottomColor: "#F3F4F6",
+                    backgroundColor: isSelected ? "#EFF6FF" : "white",
+                  }}
                   onPress={() => {
                     onChange(item.value);
                     setIsOpen(false);
@@ -186,7 +238,11 @@ const CustomDropdown: React.FC<CustomDropdownProps> = ({
                   activeOpacity={0.7}
                 >
                   <Text
-                    className={`text-sm ${isSelected ? "text-blue-600 font-semibold" : "text-gray-800"}`}
+                    style={{
+                      fontSize: 14,
+                      color: isSelected ? "#2563EB" : "#1F2937",
+                      fontWeight: isSelected ? "600" : "400",
+                    }}
                   >
                     {item.label}
                   </Text>

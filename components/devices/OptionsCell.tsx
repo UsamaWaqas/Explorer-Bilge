@@ -1,5 +1,5 @@
 import { Ionicons, MaterialIcons } from "@expo/vector-icons";
-import { useRouter } from "expo-router";
+import { Href, useRouter } from "expo-router";
 import React, { useState } from "react";
 import { Pressable, View } from "react-native";
 import { OptionsCellProps } from "../../types/UserDevices.types";
@@ -11,10 +11,10 @@ export default function OptionsCell({ row, onSettingsPress }: OptionsCellProps) 
 
   return (
     <>
-      <View className="" style={{ flexDirection: "row", gap: 8, alignItems: "center", }}>
+      <View style={{ flexDirection: "row", gap: 8, alignItems: "center" }}>
 
-        {/* Warning — navigates to Events tab */}
-        <Pressable onPress={() => router.push("/(tabs)/events")}>
+        {/* Warning — device specific events */}
+        <Pressable onPress={() => router.push(`/(tabs)/device-events/${row.device_id}` as Href)}>
           <MaterialIcons name="warning" size={18} color="#ef4444" />
         </Pressable>
 

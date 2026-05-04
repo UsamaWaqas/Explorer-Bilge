@@ -21,7 +21,7 @@ export const useAlarmStore = create<AlarmState>((set, get) => ({
   isAlarm: (packet, passedProduct = null) => {
     const { products } = get();
 
-    // passedProduct diya hai to use karo, warna store se dhundo
+  
     const product =
       passedProduct ??
       products.find((p) => p.id == packet?.product_id) ??
@@ -29,7 +29,6 @@ export const useAlarmStore = create<AlarmState>((set, get) => ({
 
     if (!product) return false;
 
-    // checkin == 0 wale attributes alarm check ke liye hain
     const alarms = product.attributes?.filter((item) => item.checkin == 0);
 
     if (!alarms || alarms.length === 0) return false;
@@ -40,7 +39,7 @@ export const useAlarmStore = create<AlarmState>((set, get) => ({
       const thresholdNumber = Number(alarm.threshold);
 
       if (packetValue != null && packetValue != undefined && !isNaN(thresholdNumber)) {
-        // Temperature ko Fahrenheit mein convert karo (web se same logic)
+       
         let packetNumber =
           alarm.xup?.data_type === "temperature"
             ? (Number(packetValue) * 9) / 5 + 32

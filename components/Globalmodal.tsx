@@ -63,7 +63,7 @@ export default function GlobalDrawer({ children }: GlobalDrawerProps) {
           top: 0, left: 0, right: 0, bottom: 0,
           backgroundColor: "rgba(0,0,0,0.5)",
           opacity: fadeAnim,
-          zIndex: 998,  // ✅ Toast 999 pe hoga, drawer 998
+          zIndex: 998,  
         }}
       >
         <Pressable style={{ flex: 1 }} onPress={close} />
@@ -76,7 +76,7 @@ export default function GlobalDrawer({ children }: GlobalDrawerProps) {
           top: 0, right: 0, bottom: 0,
           width: DRAWER_WIDTH,
           backgroundColor: "#E8EEF3",
-          zIndex: 998,  // ✅ Toast ke neeche
+          zIndex: 998, 
           transform: [{ translateX }],
           shadowColor: "#000",
           shadowOffset: { width: -2, height: 0 },

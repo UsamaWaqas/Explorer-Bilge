@@ -188,8 +188,10 @@ export default function SensorReportModal({
             ))}
           </View>
 
-          {/* ScrollView always rendered */}
-          <ScrollView showsVerticalScrollIndicator={false}>
+          <ScrollView
+            showsVerticalScrollIndicator={false}
+            contentContainerStyle={{ paddingBottom: 40 }}
+          >
 
             {loading ? (
               <ActivityIndicator
@@ -215,7 +217,7 @@ export default function SensorReportModal({
 
             ) : (
               <>
-                {/* Latest Stats Cards */}
+
                 <View className="flex-row gap-2 mb-5">
                   <View className="flex-1 bg-[#E3EFFF] rounded-xl p-3 items-center">
                     <Text className="text-[10px] text-gray-500 font-medium mb-1">
@@ -262,48 +264,55 @@ export default function SensorReportModal({
                   <HumidityChart data={humidityChartData} />
                 </View>
 
-                {/* Data Table Header */}
-                <View className="flex-row bg-gray-100 rounded-lg px-3 py-2 mb-1">
-                  <Text className="flex-1 text-[11px] font-bold text-gray-600">
-                    {selectedInterval === "daily"
-                      ? "Day"
-                      : selectedInterval === "weekly"
-                      ? "Week"
-                      : "Month"}
-                  </Text>
-                  <Text className="w-20 text-[11px] font-bold text-gray-600 text-center">
-                    Temp (°)
-                  </Text>
-                  <Text className="w-20 text-[11px] font-bold text-gray-600 text-center">
-                    Hum (%)
-                  </Text>
-                  <Text className="w-20 text-[11px] font-bold text-gray-600 text-center">
-                    Lux
-                  </Text>
-                </View>
+                <View className="px-3 bg-gray-50 p-2 rounded-lg">
 
-                {/* Data Table Rows */}
-                {data.map((item, index) => (
-                  <View
-                    key={index}
-                    className={`flex-row px-3 py-2 rounded-lg mb-0.5 ${
-                      index % 2 === 0 ? "bg-white" : "bg-gray-50"
-                    }`}
-                  >
-                    <Text className="flex-1 text-[11px] text-gray-700">
-                      {getLabel(item)}
-                    </Text>
-                    <Text className="w-20 text-[11px] text-gray-700 text-center">
-                      {item.temperature}
-                    </Text>
-                    <Text className="w-20 text-[11px] text-gray-700 text-center">
-                      {item.humidity}
-                    </Text>
-                    <Text className="w-20 text-[11px] text-gray-700 text-center">
-                      {item.luminosity}
-                    </Text>
+                  <View className="border border-gray-200 rounded-xl overflow-hidden mb-4">
+
+                    {/* Table Header */}
+                    <View className="flex-row bg-[#E3EFFF] px-4 py-2.5">
+                      <Text className="flex-1 text-[11px] font-bold">
+                        {selectedInterval === "daily"
+                          ? "Day"
+                          : selectedInterval === "weekly"
+                          ? "Week"
+                          : "Month"}
+                      </Text>
+                      <Text className="w-20 text-[11px] font-bold text-center">
+                        Temp (°)
+                      </Text>
+                      <Text className="w-20 text-[11px] font-bold text-center">
+                        Hum (%)
+                      </Text>
+                      <Text className="w-20 text-[11px] font-bold text-center">
+                        Lux
+                      </Text>
+                    </View>
+
+                    {/* Table Rows */}
+                    {data.map((item, index) => (
+                      <View
+                        key={index}
+                        className="flex-row px-4 py-2.5 border-t border-gray-200"
+                      >
+                        <Text className="flex-1 text-[11px] font-medium text-gray-700">
+                          {getLabel(item)}
+                        </Text>
+                        <Text className="w-20 text-[11px] text-[#2C64B3] font-semibold text-center">
+                          {item.temperature}
+                        </Text>
+                        <Text className="w-20 text-[11px] text-[#2C64B3] font-semibold text-center">
+                          {item.humidity}
+                        </Text>
+                        <Text className="w-20 text-[11px] text-[#2C64B3] font-semibold text-center">
+                          {item.luminosity}
+                        </Text>
+                      </View>
+                    ))}
+
                   </View>
-                ))}
+                </View>
+                {/* ── End Table Card ── */}
+
               </>
             )}
 

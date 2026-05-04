@@ -3,14 +3,41 @@ import { useAuthStore } from "@/store/authStore";
 import { useCallback, useEffect, useState } from "react";
 import { Linking } from "react-native";
 import { STORAGE_KEYS } from "../constants/keys";
-import {
-  fetchDevicesService,
-  fetchProductsByUserService,
-} from "../services/userDeviceservices";
+import { AlarmProduct } from "../types/Alarm.types";
 import { DeviceRow, PaginationParams } from "../types/UserDevices.types";
-import { loadData, saveData } from "../utils/asyncStorage";
 import { isGreaterThan24Hours } from "../utils/Devicehelpers";
+import { loadData, saveData } from "../utils/asyncStorage";
 import { useNetwork } from "./useNetwork";
+import { useSimpleQuery } from "./useSimpleQuery";
+
+type DevicesApiResponse = {
+  data: {
+    data: DeviceRow[];
+    total?: number;
+  };
+};
+
+type ProductsApiResponse = {
+  data: AlarmProduct[];
+};
+
+type DeviceCache = {
+  data: DeviceRow[];
+  total: number;
+  savedAt: number;
+};
+
+const applyLocalSearch = (data: DeviceRow[], search: string): DeviceRow[] => {
+  if (!search.trim()) return data;
+  const lower = search.toLowerCase();
+  return data.filter((row) =>
+    Object.values(row).some((val) =>
+      String(val ?? "")
+        .toLowerCase()
+        .includes(lower),
+    ),
+  );
+};
 
 export function useUserDevices() {
   const { user } = useAuthStore();
@@ -19,100 +46,119 @@ export function useUserDevices() {
 
   const [searchText, setSearchText] = useState("");
   const [settingsRow, setSettingsRow] = useState<DeviceRow | null>(null);
-  const [rows, setRows] = useState<DeviceRow[]>([]);
-  const [isFetching, setIsFetching] = useState(false);
+  const [offlineRows, setOfflineRows] = useState<DeviceRow[]>([]);
+  const [offlineTotal, setOfflineTotal] = useState(0);
   const [paginationParams, setPaginationParams] = useState<PaginationParams>({
     currentPage: 1,
     limit: 10,
     searchInput: "",
   });
 
-  // Fetch products on mount
-  useEffect(() => {
-    if (!user?.id) return;
-    fetchProductsByUserService(user.id).then(setProducts);
-  }, [user?.id]);
-
-  // Background prefetch — jab bhi online ho, full data cache kar lo
-  const prefetchAllDevices = useCallback(async () => {
-    if (!user?.id || !isConnected) return;
-    try {
-      const allData = await fetchDevicesService(user.id, 1, 10, "");
-      if (allData && allData.length > 0) {
-        await saveData(STORAGE_KEYS.DEVICES, allData);
-      }
-    } catch {
-      // silently fail — prefetch is best-effort
-    }
-  }, [user?.id, isConnected]);
+  const { data: productsResponse } = useSimpleQuery<ProductsApiResponse>(
+    "products-by-user",
+    `/api/deviceTypes/getDeviceTypesByUserId/${user?.id}`,
+    {},
+    {
+      enabled: !!user?.id,
+      staleTime: 1000 * 60 * 10,
+      gcTime: 1000 * 60 * 30,
+    },
+  );
 
   useEffect(() => {
-    prefetchAllDevices();
-  }, [prefetchAllDevices]);
-
-  const applyLocalSearch = (data: DeviceRow[], search: string): DeviceRow[] => {
-    if (!search.trim()) return data;
-    const lower = search.toLowerCase();
-    return data.filter((row) =>
-      Object.values(row).some((val) =>
-        String(val ?? "").toLowerCase().includes(lower)
-      )
-    );
-  };
-
-  const fetchDevices = useCallback(async () => {
-    if (!user?.id) return;
-
-    // OFFLINE MODE
-    if (!isConnected) {
-      const cached = await loadData<DeviceRow[]>(STORAGE_KEYS.DEVICES, []);
-      const filtered = applyLocalSearch(cached, paginationParams.searchInput);
-      setRows(filtered);
-      return;
+    if (productsResponse?.data) {
+      setProducts(productsResponse.data);
     }
+  }, [productsResponse?.data]);
 
-    // ONLINE MODE
-    setIsFetching(true);
-    try {
-      const data = await fetchDevicesService(
-        user.id,
-        paginationParams.currentPage,
-        paginationParams.limit,
-        paginationParams.searchInput
+  const {
+    data: devicesResponse,
+    isFetching,
+    isLoading, 
+    refetch: fetchDevices,
+  } = useSimpleQuery<DevicesApiResponse>(
+    "user-devices",
+    `/api/device-values/user/${user?.id}/device-type`,
+    {
+      limit: paginationParams.limit,
+      offset: (paginationParams.currentPage - 1) * paginationParams.limit,
+      search: paginationParams.searchInput,
+    },
+    {
+      enabled: !!user?.id,
+      staleTime: 1000 * 30,
+      gcTime: 1000 * 60 * 10,
+    },
+  );
+
+  useEffect(() => {
+    if (
+      devicesResponse?.data?.data &&
+      paginationParams.currentPage === 1 &&
+      !paginationParams.searchInput
+    ) {
+      saveData<DeviceCache>(STORAGE_KEYS.DEVICES, {
+        data: devicesResponse.data.data,
+        total: devicesResponse.data.total ?? 0,
+        savedAt: Date.now(),
+      });
+    }
+  }, [devicesResponse]);
+
+  useEffect(() => {
+    const load = async () => {
+      if (isConnected && devicesResponse?.data?.data) return;
+
+      const cached = await loadData<DeviceCache>(STORAGE_KEYS.DEVICES, {
+        data: [],
+        total: 0,
+        savedAt: 0,
+      });
+
+      if (!cached?.data?.length) return;
+
+      const isExpired = Date.now() - cached.savedAt > 1000 * 60 * 60 * 8;
+      if (isExpired) return;
+
+      const filtered = applyLocalSearch(
+        cached.data,
+        paginationParams.searchInput,
       );
-      setRows(data);
+      setOfflineRows(filtered);
+      setOfflineTotal(filtered.length);
+    };
 
-      // Sirf unsearched data cache karo taake cache clean rahe
-      if (!paginationParams.searchInput) {
-        await saveData(STORAGE_KEYS.DEVICES, data);
-      }
-    } catch {
-      // Network error — fallback to cache with local search
-      const cached = await loadData<DeviceRow[]>(STORAGE_KEYS.DEVICES, []);
-      const filtered = applyLocalSearch(cached, paginationParams.searchInput);
-      setRows(filtered);
-    } finally {
-      setIsFetching(false);
-    }
-  }, [user?.id, paginationParams, isConnected]);
+    load();
+  }, [isConnected, devicesResponse, paginationParams]);
 
-  useEffect(() => {
-    fetchDevices();
-  }, [fetchDevices]);
+  const rows: DeviceRow[] = devicesResponse?.data?.data ?? offlineRows;
+  const totalRows: number = devicesResponse?.data?.total ?? offlineTotal;
 
-  const handleSearchChange = (val: string) => {
+  const handleSearchChange = useCallback((val: string) => {
     setSearchText(val);
+    setOfflineRows([]);
+    setOfflineTotal(0);
     setPaginationParams((prev) => ({
       ...prev,
       searchInput: val,
       currentPage: 1,
     }));
-  };
+  }, []);
+
+  const handlePageChange = useCallback((page: number) => {
+    setOfflineRows([]);
+    setOfflineTotal(0);
+    setPaginationParams((prev) => ({ ...prev, currentPage: page }));
+  }, []);
+
+  const handleLimitChange = useCallback((limit: number) => {
+    setPaginationParams((prev) => ({ ...prev, limit, currentPage: 1 }));
+  }, []);
 
   const openMap = useCallback((row: DeviceRow) => {
     if (row.latitude && row.longitude) {
       Linking.openURL(
-        `https://www.google.com/maps?q=${row.latitude},${row.longitude}`
+        `https://www.google.com/maps?q=${row.latitude},${row.longitude}`,
       );
     }
   }, []);
@@ -124,19 +170,24 @@ export function useUserDevices() {
       if (isAlarm(row, product)) return "red";
       return "green";
     },
-    [products, isAlarm]
+    [products, isAlarm],
   );
 
   return {
     user,
     rows,
+    totalRows,
     isFetching,
+    isLoading, 
     isConnected,
     searchText,
     settingsRow,
+    paginationParams,
     setSettingsRow,
     fetchDevices,
     handleSearchChange,
+    handlePageChange,
+    handleLimitChange,
     openMap,
     getDotColor,
   };

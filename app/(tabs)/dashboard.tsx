@@ -1,7 +1,7 @@
 // src/screens/Dashboard.tsx
 
 import { Ionicons } from "@expo/vector-icons";
-import { ScrollView, Text, View } from "react-native";
+import { RefreshControl, ScrollView, Text, View } from "react-native"; // ✅ RefreshControl add
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import CustomDropdown from "../../components/Select";
@@ -19,6 +19,8 @@ export default function Dashboard() {
     loadingWeather,
     loadingMonitoring,
     loadingTides,
+    isRefreshing,     
+    onRefresh,        
     selectedDevice,
     deviceOptions,
     handleDeviceChange,
@@ -47,6 +49,13 @@ export default function Dashboard() {
         <ScrollView
           className="flex-1 bg-white px-4 pt-4"
           contentContainerStyle={{ paddingBottom: 100 + insets.bottom }}
+          refreshControl={  
+            <RefreshControl
+              refreshing={isRefreshing}
+              onRefresh={onRefresh}
+              tintColor="#2C64B3"
+            />
+          }
         >
           {/* CURRENT CONDITIONS */}
           <View className="flex-row items-center gap-3 mb-3">
@@ -54,7 +63,6 @@ export default function Dashboard() {
               <Text className="text-[#2563EB] text-base font-bold tracking-wide">
                 CURRENT CONDITIONS
               </Text>
-              {/* Device name + location */}
               {selectedDevice && (
                 <View className="flex-row items-center gap-1 mt-0.5">
                   <Ionicons name="location-sharp" size={13} color="#16a34a" />

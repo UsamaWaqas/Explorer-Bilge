@@ -19,15 +19,13 @@ const TileLayout = ({
   children,
   style,
 }: TileLayoutProps) => {
-  // ✅ FIX: defensively coerce value to a plain string.
-  // If getTilesConfig ever returns an object/element as `value`,
-  // this prevents "Objects are not valid as a React child" from crashing the render.
+  
   const safeValue =
     typeof value === "string" || typeof value === "number"
       ? String(value)
       : "NA";
 
-  // ✅ FIX: same guard for title
+
   const safeTitle =
     typeof title === "string" || typeof title === "number"
       ? String(title)
@@ -49,8 +47,7 @@ const TileLayout = ({
           backgroundColor: isDark ? "#2c64b3" : "#F9FAFB",
           justifyContent: "center",
         },
-        // ✅ FIX: only spread style if it's a plain object (ViewStyle), not
-        // a string/element accidentally passed from textColor
+        
         typeof style === "object" && !React.isValidElement(style)
           ? style
           : undefined,
@@ -70,7 +67,7 @@ const TileLayout = ({
       ) : (
         <View className="flex-row items-center justify-between w-full">
           <View className="mt-2 ml-[2px]">
-            {/* ✅ FIX: only render Icon if it's a valid React element */}
+          
             {React.isValidElement(Icon) ? Icon : null}
           </View>
           <View className="flex-col items-center basis-[70%] gap-3 pr-2">

@@ -9,7 +9,10 @@ import { StatusBar } from "expo-status-bar";
 import React, { useEffect } from "react";
 import { View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import Toast from "react-native-toast-message";
 import { Colors } from "../../assets/Color";
+import { toastConfig } from "../../components/ToastConfig";
+
 const TabLayout = () => {
   const pathname = usePathname();
 
@@ -30,7 +33,7 @@ const TabLayout = () => {
         <Tabs
           screenOptions={{
             headerShown: false,
-            lazy: false,
+            lazy: true,
             freezeOnBlur: false,
             tabBarActiveTintColor: Colors.PRIMARY,
             tabBarInactiveTintColor: Colors.dark.text,
@@ -49,6 +52,7 @@ const TabLayout = () => {
             },
           }}
         >
+          {/* 1 — Dashboard */}
           <Tabs.Screen
             name="dashboard"
             options={{
@@ -58,6 +62,8 @@ const TabLayout = () => {
               ),
             }}
           />
+
+          {/* 2 — Devices */}
           <Tabs.Screen
             name="devices"
             options={{
@@ -67,16 +73,18 @@ const TabLayout = () => {
               ),
             }}
           />
+
+          {/* 3 — Add CENTER green button */}
           <Tabs.Screen
             name="add"
             options={{
               title: "Add",
-              tabBarIcon: ({ color }) => (
+              tabBarIcon: () => (
                 <View
                   style={{
                     backgroundColor: "#4CAF50",
-                    width: 44,
-                    height: 44,
+                    width: 48,
+                    height:48,
                     borderRadius: 28,
                     justifyContent: "center",
                     alignItems: "center",
@@ -88,11 +96,13 @@ const TabLayout = () => {
                     shadowRadius: 3.84,
                   }}
                 >
-                  <Ionicons name="add" size={32} color="white" />
+                  <Ionicons name="add" size={28} color="white" />
                 </View>
               ),
             }}
           />
+
+          {/* 4 — Events */}
           <Tabs.Screen
             name="events"
             options={{
@@ -102,6 +112,8 @@ const TabLayout = () => {
               ),
             }}
           />
+
+          {/* 5 — Settings */}
           <Tabs.Screen
             name="settings"
             options={{
@@ -111,19 +123,32 @@ const TabLayout = () => {
               ),
             }}
           />
-          <Tabs.Screen
-            name="profile"
-            options={{ href: null }}
-          />
+
+          {/* ── Hidden ── */}
+          <Tabs.Screen name="profile" options={{ href: null }} />
+          <Tabs.Screen name="configure-alerts" options={{ href: null }} />
+          <Tabs.Screen name="device-health-schedules" options={{ href: null }} />
+          <Tabs.Screen name="Change-password" options={{ href: null }} />
+          <Tabs.Screen name="notification-rules" options={{ href: null }} />
+          <Tabs.Screen name="device-events/[id]" options={{ href: null }} />
+          <Tabs.Screen name="device-events/add-device/step-two/[id]" options={{ href: null }} />
+          <Tabs.Screen name="device-events/add-device/step-three/[id]" options={{ href: null }} />
+
         </Tabs>
 
-        {/* ✅ NetInfoBanner useNetwork() hook se store read karta hai — koi alag subscription nahi */}
         <NetInfoBanner />
-
         <GlobalDrawer>
           <Sidebar />
         </GlobalDrawer>
+
       </SafeAreaView>
+
+      <Toast
+        config={toastConfig}
+        position="top"
+        topOffset={60}
+        visibilityTime={3000}
+      />
     </>
   );
 };
