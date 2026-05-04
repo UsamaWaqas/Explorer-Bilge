@@ -1,33 +1,60 @@
 {
   "expo": {
     "name": "My-Armit",
-    "slug": "My-Armit",
+    "slug": "my-armit",
+    "owner": "chirptech",
     "version": "1.0.0",
     "orientation": "portrait",
-    // "icon": "./assets/images/armIT_logo.png",
+    "icon": "./assets/svg/FavIcon_MyARMIT.png",
     "scheme": "myarmit",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
+    "splash": {
+      "image": "./assets/svg/FavIcon_MyARMIT.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#ffffff"
+    },
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.usama.myarmit"
+      "bundleIdentifier": "com.ChirpTech.myarmit",
+      "associatedDomains": [
+        "applinks:api.example.com"
+      ]
     },
     "android": {
-      "package": "com.usama.myarmit",
+      "package": "com.ChirpTech.myarmit",
       "adaptiveIcon": {
-        // "foregroundImage": "./assets/images/armIT_logo.png",
+        "foregroundImage": "./assets/svg/armit_final.png",
         "backgroundColor": "#ffffff"
       },
-      "edgeToEdgeEnabled": true,
-      "predictiveBackGestureEnabled": false
+      "predictiveBackGestureEnabled": false,
+      "intentFilters": [
+        {
+          "action": "VIEW",
+          "autoVerify": true,
+          "data": [
+            {
+              "scheme": "https",
+              "host": "api.example.com",
+              "pathPrefix": "/account-details"
+            }
+          ],
+          "category": [
+            "BROWSABLE",
+            "DEFAULT"
+          ]
+        }
+      ]
     },
     "web": {
       "output": "static",
-      "favicon": "./assets/images/favicon.png"
+      "favicon": "./assets/svg/armit_final.png"
     },
     "plugins": [
       "expo-router",
-      "expo-secure-store"
+      "expo-secure-store",
+      "expo-dev-client",
+      "expo-font"
     ],
     "experiments": {
       "typedRoutes": true,
@@ -36,7 +63,7 @@
     "extra": {
       "router": {},
       "eas": {
-        "projectId": "5eb478ba-81df-4ad5-86aa-3a90a71eff46"
+        "projectId": "952d9fd1-405b-4409-bd1c-872d9c807ff2"
       }
     }
   }

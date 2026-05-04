@@ -71,7 +71,7 @@ export default function EditableCell({
   }}
 >
   <Text style={{ color: "#fff", fontSize: 10, fontWeight: "600" }}>
-    {isSaving ? "Saving..." : "Save"}
+    {isSaving ? "Save" : "Save"}
   </Text>
 </Pressable>
     </View>

@@ -61,34 +61,30 @@ export default function Sidebar() {
     else setTogglingEmail(true);
 
     try {
-      // ✅ true — apiHelper apna toast dikhayega
       const res = await post("/api/toggle-notification", { type }, {}, true);
 
       if (res?.success) {
         const key = isPhone ? "phone_notification" : "email_notification";
-        const value = res?.data?.[key];
+        // API returns 0 or 1 — keep as number to match UserDetail type
+        const value: number = res?.data?.[key] ?? 0;
 
         const updated: UserDetail = {
-          phone_notification: !!(userDetail?.phone_notification),
-          email_notification: !!(userDetail?.email_notification),
-          notification_phone: userDetail?.notification_phone ?? "",
-          notification_email: userDetail?.notification_email ?? "",
-          [key]: !!value,
+          ...(userDetail as UserDetail),
+          [key]: value,
         };
 
         setUserDetail(updated);
 
         if (isPhone) setTextSmsEnabled(!!value);
         else setEmailNotifEnabled(!!value);
-
       } else {
-        // revert
+      
         if (isPhone) setTextSmsEnabled((prev) => !prev);
         else setEmailNotifEnabled((prev) => !prev);
       }
     } catch (error) {
       console.error("error toggling notification", error);
-      // revert
+    
       if (isPhone) setTextSmsEnabled((prev) => !prev);
       else setEmailNotifEnabled((prev) => !prev);
     } finally {
@@ -108,8 +104,18 @@ export default function Sidebar() {
     router.push("/(tabs)/profile");
   };
 
+  const handleNotifiAlerts = () => {
+    close();
+    router.push("/(tabs)/configure-alerts");
+  };
+
+  const handleAddDevice = () => {
+    close();
+    router.push("/(tabs)/add");
+  };
+
   return (
-    <ScrollView className="p-4" showsVerticalScrollIndicator={false}>
+    <ScrollView className="p-4  " showsVerticalScrollIndicator={false}>
       <Text className="text-[#2C64B3] text-lg font-bold mb-4">PROFILE</Text>
 
       <View className="flex flex-col gap-y-3">
@@ -144,7 +150,10 @@ export default function Sidebar() {
             <Text className="text-[#6B7280] text-lg font-bold">PROFILE</Text>
           </Pressable>
 
-          <Pressable className="bg-[#C9D0D3] h-28 flex-1 border border-[#9f9f9f] rounded-md items-center justify-center">
+          <Pressable
+            onPress={handleNotifiAlerts}
+            className="bg-[#C9D0D3] h-28 flex-1 border border-[#9f9f9f] rounded-md items-center justify-center"
+          >
             <View className="flex-row items-center mb-1">
               <Ionicons name="wifi" size={28} color="#6B7280" />
               <Text className="text-[#6B7280] text-lg font-bold ml-1">NOTIFI</Text>
@@ -159,7 +168,10 @@ export default function Sidebar() {
           {/* SMS */}
           <View className="flex-row justify-between items-center mb-2">
             <Text className="text-[#6B7280] text-lg font-bold">TEXT / SMS</Text>
-            <View style={{ opacity: togglingPhone ? 0.5 : 1, pointerEvents: togglingPhone ? "none" : "auto" }}>
+            <View
+              pointerEvents={togglingPhone ? "none" : "auto"}
+              style={{ opacity: togglingPhone ? 0.5 : 1 }}
+            >
               <AnimatedSwitch
                 value={textSmsEnabled}
                 onValueChange={() => toggleSwitch("phone")}
@@ -181,7 +193,10 @@ export default function Sidebar() {
           {/* EMAIL */}
           <View className="flex-row justify-between items-center mb-2">
             <Text className="text-[#6B7280] text-lg font-bold">EMAIL NOTIFI</Text>
-            <View style={{ opacity: togglingEmail ? 0.5 : 1, pointerEvents: togglingEmail ? "none" : "auto" }}>
+            <View
+              pointerEvents={togglingEmail ? "none" : "auto"}
+              style={{ opacity: togglingEmail ? 0.5 : 1 }}
+            >
               <AnimatedSwitch
                 value={emailNotifEnabled}
                 onValueChange={() => toggleSwitch("email")}
@@ -194,7 +209,6 @@ export default function Sidebar() {
             onChangeText={setEmailAddress}
             inputClassName="h-12"
             keyboardType="email-address"
-            
             autoCapitalize="none"
             leftIcon={<Ionicons name="mail-outline" size={18} color="gray" />}
           />
@@ -210,7 +224,10 @@ export default function Sidebar() {
         </Pressable>
 
         {/* Add Device */}
-        <Pressable className="bg-[#7B868C] h-16 w-full rounded-md flex-row items-center px-4">
+        <Pressable
+          onPress={handleAddDevice}
+          className="bg-[#7B868C] h-16 w-full rounded-md flex-row items-center px-4"
+        >
           <Ionicons name="add-circle-outline" size={32} color="#C9D0D3" />
           <Text className="text-[#C9D0D3] text-xl font-bold ml-3">ADD DEVICE</Text>
         </Pressable>

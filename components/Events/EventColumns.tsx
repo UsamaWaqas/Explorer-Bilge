@@ -2,7 +2,6 @@
 
 import React, { useMemo } from "react";
 import { Image, Text, View } from "react-native";
-import { ColumnType } from "../Table";
 import {
   PacketRow,
   calculateElapsedTime,
@@ -11,6 +10,7 @@ import {
   formatTimestamp,
   getEventDescription,
 } from "../../utils/packetHelpers";
+import { ColumnType } from "../Table";
 
 const NetworkIcon = require("../../assets/NetworkIcon.png");
 
@@ -30,7 +30,7 @@ export const useEventColumns = ({ rows, getIsAlert, getAlertTimes }: Props): Col
         key: "xNID" as keyof PacketRow,
         label: "xNID",
         width: 80,
-        render: (row) => (
+        render: (row: PacketRow) => (
           <Text className="text-[11px] text-gray-900">{row.xNID ?? "---"}</Text>
         ),
       },
@@ -38,7 +38,7 @@ export const useEventColumns = ({ rows, getIsAlert, getAlertTimes }: Props): Col
         key: "updated_at" as keyof PacketRow,
         label: "Time Stamp",
         width: 150,
-        render: (row) => (
+        render: (row: PacketRow) => (
           <Text className="text-[11px] text-gray-900">
             {formatTimestamp(row.updated_at)}
           </Text>
@@ -48,7 +48,7 @@ export const useEventColumns = ({ rows, getIsAlert, getAlertTimes }: Props): Col
         key: "devEUI" as keyof PacketRow,
         label: "DEVEUI",
         width: 140,
-        render: (row) => (
+        render: (row: PacketRow) => (
           <Text className="text-[11px] text-gray-900">{row.devEUI ?? "---"}</Text>
         ),
       },
@@ -56,7 +56,7 @@ export const useEventColumns = ({ rows, getIsAlert, getAlertTimes }: Props): Col
         key: "external_input" as keyof PacketRow,
         label: "Event Data Type",
         width: 120,
-        render: (row) => {
+        render: (row: PacketRow) => {
           const isAlert = getIsAlert(row);
           return (
             <View
@@ -73,7 +73,7 @@ export const useEventColumns = ({ rows, getIsAlert, getAlertTimes }: Props): Col
         key: "reed_state" as keyof PacketRow,
         label: "Description",
         width: 180,
-        render: (row) => {
+        render: (row: PacketRow) => {
           const isAlert = getIsAlert(row);
           return (
             <Text
@@ -88,7 +88,7 @@ export const useEventColumns = ({ rows, getIsAlert, getAlertTimes }: Props): Col
         key: "temperature" as keyof PacketRow,
         label: "Temp, Hum, Bat",
         width: 150,
-        render: (row) => (
+        render: (row: PacketRow) => (
           <Text className="text-[11px] text-gray-900">
             {formatTempHumBat(row)}
           </Text>
@@ -98,7 +98,7 @@ export const useEventColumns = ({ rows, getIsAlert, getAlertTimes }: Props): Col
         key: "voltage" as keyof PacketRow,
         label: "Network",
         width: 80,
-        render: () => (
+        render: (_row: PacketRow) => (
           <Image
             source={NetworkIcon}
             className="w-7 h-7"
@@ -110,7 +110,7 @@ export const useEventColumns = ({ rows, getIsAlert, getAlertTimes }: Props): Col
         key: "gatewayID" as keyof PacketRow,
         label: "Gateway ID",
         width: 130,
-        render: (row) => (
+        render: (row: PacketRow) => (
           <Text className="text-[11px] text-gray-900">{row.gatewayID ?? "---"}</Text>
         ),
       },
@@ -118,7 +118,7 @@ export const useEventColumns = ({ rows, getIsAlert, getAlertTimes }: Props): Col
         key: "id" as keyof PacketRow,
         label: "Elapsed",
         width: 120,
-        render: (row) => {
+        render: (row: PacketRow) => {
           const isAlert = getIsAlert(row);
           if (!isAlert)
             return <Text className="text-[11px] text-gray-900">---</Text>;
@@ -136,5 +136,5 @@ export const useEventColumns = ({ rows, getIsAlert, getAlertTimes }: Props): Col
         },
       },
     ],
-    [rows]
+    [rows, getIsAlert, getAlertTimes]
   );

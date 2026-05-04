@@ -27,6 +27,19 @@ interface Props {
   loadingTides?: boolean;
 }
 
+// Small skeleton rows for tides tile
+const TidesSkeleton = () => (
+  <View className="gap-y-[6px]">
+    {[1, 2, 3, 4].map((i) => (
+      <View key={i} className="flex-row justify-between items-center">
+        <View className="h-2 w-14 bg-gray-200 rounded-full" />
+        <View className="h-2 w-10 bg-gray-200 rounded-full" />
+        <View className="h-2 w-8 bg-gray-200 rounded-full" />
+      </View>
+    ))}
+  </View>
+);
+
 export const WeatherSection = ({
   weatherData,
   loadingWeather,
@@ -92,7 +105,7 @@ export const WeatherSection = ({
       {isMarina ? (
         <TileLayout title="Today's Tides" style={{ width: "48.5%" }}>
           {loadingTides ? (
-            <Text className="text-gray-400 text-xs text-center">Loading...</Text>
+            <TidesSkeleton />
           ) : (
             <View className="gap-y-[2px]">
               {[tides?.first, tides?.second, tides?.third, tides?.fourth].map((tide, i) => {
@@ -100,7 +113,6 @@ export const WeatherSection = ({
                 const time = tide.substring(0, tide.lastIndexOf(" "));
                 const isHigh = tide.includes("HIGH");
                 const isLow = tide.includes("LOW");
-                const isNext = tides?.next && tide.includes(tides.next.substring(0, 5));
                 return (
                   <View key={i} className="flex-row justify-between items-center">
                     <Text className={`text-[10px] ${i === 2 ? "text-red-500" : i === 3 ? "text-green-500" : "text-gray-500"}`}>

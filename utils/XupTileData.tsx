@@ -89,7 +89,7 @@ export const getTilesConfig = (xups: Tile[] = [], deviceValues: DeviceValues = {
     return {
       label: tile?.lable ?? capitalizedLabel,
       value: formattedValue,
-      // ✅ Alert = white icon (blue bg pe), Normal = blue icon
+     
       icon: <IconComponent size={ICON_SIZE} color={isAlert ? 'white' : '#2C64B3'} />,
       textColor: getTextColor(formattedValue),
       dataType: tile?.data_type,

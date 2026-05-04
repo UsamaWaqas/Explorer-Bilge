@@ -55,8 +55,7 @@ export const TileList = ({
               item={item}
               isLast={index === productData.length - 1}
               disabled={isAttributeDisabled(item)}
-              isFetching={isFetching}
-              isRefreshing={isRefreshing}
+              // ✅ isFetching aur isRefreshing pass nahi kar rahe ab
               onToggle={onToggle}
             />
           ))
