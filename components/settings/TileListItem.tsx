@@ -30,7 +30,7 @@ export const TileListItem = memo(
           ${disabled ? "opacity-40" : ""}
         `}
       >
-        {item.name}
+        {item.name} 
       </Text>
 
             <View className={disabled ? "opacity-40" : ""}>
