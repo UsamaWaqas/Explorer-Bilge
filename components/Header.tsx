@@ -1,29 +1,24 @@
 import { Ionicons } from "@expo/vector-icons";
 import { router, usePathname } from "expo-router";
-import { useState, useEffect } from "react";
 import { Pressable, StatusBar, Text, View } from "react-native";
-import { useDrawerStore } from "../store/ModalStore";
+import GreenBell from "../assets/Icons/GreenBell";
+import WhiteBell from "../assets/Icons/WhiteBell";
 import ArmITLogo from "../assets/images/armIT_logo.svg";
 import BurgerIcon from "../assets/svg/Burger.svg";
 import Ionicon from "../assets/svg/lock.svg";
-import WhiteBell from "../assets/Icons/WhiteBell";
-import GreenBell from "../assets/Icons/GreenBell";
+import { useAuthStore } from "../store/authStore";
+import { useDrawerStore } from "../store/ModalStore";
 
 export default function Header() {
   const open = useDrawerStore((s) => s.open);
   const pathname = usePathname();
-  const [bellActive, setBellActive] = useState(false);
+  const userDetail = useAuthStore((s) => s.userDetail);
 
-  // Jab settings se bahar jao to green hat jaye
-  useEffect(() => {
-    if (!pathname.includes("settings")) {
-      setBellActive(false);
-    }
-  }, [pathname]);
+  const bellActive = pathname.includes("configure-alerts");
+  const location = userDetail?.address_1 ?? "Location";
 
   const handleBellPress = () => {
-    setBellActive(true);
-    router.push("/(tabs)/settings");
+    router.push("/(tabs)/configure-alerts");
   };
 
   return (
@@ -31,29 +26,73 @@ export default function Header() {
       <StatusBar barStyle="light-content" backgroundColor="#2C64B3" />
 
       <View className="bg-[#2C64B3]">
-        <View className="flex-row items-center p-2 justify-between">
-          <View className="flex-row items-center flex">
-            <View className="flex-row items-center bg-white/10 rounded-md px-4 py-2">
-              <Ionicons name="location" size={16} color="white" />
-              <Text className="text-white text-sm ml-1">Lahore</Text>
-            </View>
+        <View
+          style={{
+            flexDirection: "row",
+            alignItems: "center",
+            paddingHorizontal: 12,
+            paddingVertical: 10,
+          }}
+        >
+          {/* Location Badge — shrinks when name is long */}
+          <View
+            style={{
+              flexDirection: "row",
+              alignItems: "center",
+              backgroundColor: "#C9D0D3",
+              borderRadius: 8,
+              paddingHorizontal: 10,
+              paddingVertical: 7,
+              flexShrink: 1,       
+              flexGrow: 0,
+              minWidth: 80,       
+              maxWidth: 180,      
+              marginRight: 8,
+            }}
+          >
+            <Ionicons
+              name="location-sharp"
+              size={16}
+              color="#4B5563"
+              style={{ flexShrink: 0 }} // icon never shrinks
+            />
+            <Text
+              style={{
+                color: "#4B5563",
+                marginLeft: 4,
+                fontSize: 12,
+                fontWeight: "500",
+                flexShrink: 1,     
+              }}
+              numberOfLines={1}
+              ellipsizeMode="tail"
+            >
+              {location}
+            </Text>
           </View>
 
-          <View className="flex-row items-center">
-            <View className="items-center mr-4">
-              <ArmITLogo width={120} fill="#FFF" height={40} />
-            </View>
-            <Pressable className="mr-3">
-              <Ionicon width={22} height={40} />
+          {/* Right Side Icons — never shrinks or wraps */}
+          <View
+            style={{
+              flexDirection: "row",
+              alignItems: "center",
+              gap: 12,
+              flexShrink: 0,       
+              marginLeft: "auto",  
+            }}
+          >
+            <ArmITLogo width={90} height={34} />
+
+            <Pressable hitSlop={8}>
+              <Ionicon width={22} height={32} />
             </Pressable>
 
-            {/* Bell - sirf click par green, settings navigate */}
-            <Pressable className="mr-3" onPress={handleBellPress}>
+            <Pressable onPress={handleBellPress} hitSlop={8}>
               {bellActive ? <GreenBell /> : <WhiteBell />}
             </Pressable>
 
-            <Pressable onPress={open}>
-              <BurgerIcon width={26} height={42} />
+            <Pressable onPress={open} hitSlop={8}>
+              <BurgerIcon width={24} height={32} />
             </Pressable>
           </View>
         </View>

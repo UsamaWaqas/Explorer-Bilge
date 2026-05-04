@@ -1,10 +1,12 @@
 import { get, post, put } from "../api/apiHelper";
-import { DeviceRow } from "../types/UserDevices.types";
 import { AlarmProduct } from "../types/Alarm.types";
+import { DeviceRow } from "../types/UserDevices.types";
 
 // ─── Fetch Products (for alarm check) ────────────────────────────────────────
 
-export const fetchProductsByUserService = async (userId: number): Promise<AlarmProduct[]> => {
+export const fetchProductsByUserService = async (
+  userId: number,
+): Promise<AlarmProduct[]> => {
   const res = await get(`/api/deviceTypes/getDeviceTypesByUserId/${userId}`);
   if (res?.error) return [];
   return res?.data ?? [];
@@ -16,12 +18,13 @@ export const fetchDevicesService = async (
   userId: number,
   currentPage: number,
   limit: number,
-  searchInput: string
+  searchInput: string,
 ): Promise<DeviceRow[]> => {
-  const res = await get(
-    `/api/device-values/user/${userId}/device-type`,
-    { limit, offset: (currentPage - 1) * limit, search: searchInput }
-  );
+  const res = await get(`/api/device-values/user/${userId}/device-type`, {
+    limit,
+    offset: (currentPage - 1) * limit,
+    search: searchInput,
+  });
 
   if (res?.error) return [];
   return res?.data?.data ?? [];
@@ -32,7 +35,7 @@ export const fetchDevicesService = async (
 export const updateDeviceLocationService = async (
   inventoryDeviceId: number,
   updatedValue: string,
-  areaId: number
+  areaId: number,
 ): Promise<boolean> => {
   const res = await put("/api/device-location", {
     inventory_device_id: inventoryDeviceId,
@@ -48,7 +51,7 @@ export const updateDeviceLocationService = async (
 export const updateDeviceNameService = async (
   inventoryDeviceId: number,
   updatedValue: string,
-  siteId: number
+  siteId: number,
 ): Promise<boolean> => {
   const res = await put("/api/device-name", {
     inventory_device_id: inventoryDeviceId,
@@ -76,9 +79,11 @@ export const fetchDeviceNotificationService = async (deviceId: number) => {
 
 // ─── Fetch Device Toggle Status ───────────────────────────────────────────────
 
-export const fetchDeviceToggleStatusService = async (deviceId: number): Promise<boolean> => {
+export const fetchDeviceToggleStatusService = async (
+  deviceId: number,
+): Promise<boolean> => {
   const res = await get(`/api/devices/toggle-status/${deviceId}`);
-    console.log("toggle response", res);
+  console.log("toggle response", res);
 
   if (res?.status == 200) {
     return !!res?.toggle_status;
@@ -89,7 +94,9 @@ export const fetchDeviceToggleStatusService = async (deviceId: number): Promise<
 
 // ─── Toggle Device Alert ──────────────────────────────────────────────────────
 
-export const toggleDeviceAlertService = async (deviceId: number): Promise<void> => {
+export const toggleDeviceAlertService = async (
+  deviceId: number,
+): Promise<void> => {
   await get(`/api/devices/toggle/${deviceId}`);
 };
 
@@ -98,11 +105,11 @@ export const toggleDeviceAlertService = async (deviceId: number): Promise<void> 
 export const updateDeviceNotificationService = async (
   deviceId: number,
   notificationEmail: string,
-  notificationNumber: string
+  notificationNumber: string,
 ): Promise<boolean> => {
   const res = await post(
     `/api/update-device/notification/address/${deviceId}`,
-    { notificationEmail, notificationNumber }
+    { notificationEmail, notificationNumber },
   );
 
   return !res?.error;

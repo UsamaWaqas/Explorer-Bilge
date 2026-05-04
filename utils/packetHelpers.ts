@@ -16,6 +16,10 @@ export interface PacketRow {
   gatewayID?: string;
   product_id?: number;
   device_type_name?: string;
+  notification_log?: {
+    email_sent_to?: string[];
+    sms_sent_to?: string[];
+  } | null;
 }
 
 export interface PacketProduct {
@@ -24,6 +28,7 @@ export interface PacketProduct {
 }
 
 export interface PacketsApiResponse {
+  xNID?: string;
   data: PacketRow[];
   total: number;
   last_page: number;
@@ -59,20 +64,27 @@ export function formatTempHumBat(row: PacketRow): string {
 }
 
 export function getEventDescription(row: PacketRow): string {
+  // Web DataTable.jsx ke handleEventDescription se exact same logic
   const deviceTypeName = row.device_type_name;
-  if (row.external_input || deviceTypeName === "BATTERY NOTIFI") {
+
+  if (row.external_input === true || row.external_input === 1 || deviceTypeName === "BATTERY NOTIFI") {
     return EXTERNAL_INPUT_MESSAGES[deviceTypeName ?? ""] || "Alert Event";
   }
-  if (!row.reed_state) return "Open Alarm Detected";
-  if (row.move) return "Motion Detected";
+  if (row.move === true || row.move === 1) return "Motion Detected";
+  if (row.reed_state === 0 || row.reed_state === false) return "Open Alarm Detected";
   return "Temperature out of range";
 }
 
-export function calculateElapsedTime(currentTime: string, previousTime: string): string {
-  const diffMs = new Date(previousTime).getTime() - new Date(currentTime).getTime();
+export function calculateElapsedTime(
+  currentTime: string,
+  previousTime: string,
+): string {
+  const diffMs =
+    new Date(previousTime).getTime() - new Date(currentTime).getTime();
   const diffHours = Math.floor(diffMs / 3600000);
   const diffMinutes = Math.floor((diffMs % 3600000) / 60000);
   const diffSeconds = Math.floor((diffMs % 60000) / 1000);
-  if (diffHours > 0) return `${diffHours}hr ${diffMinutes}min ${diffSeconds}sec`;
+  if (diffHours > 0)
+    return `${diffHours}hr ${diffMinutes}min ${diffSeconds}sec`;
   return `${diffMinutes}min ${diffSeconds}sec`;
 }

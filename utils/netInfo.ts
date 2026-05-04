@@ -17,14 +17,14 @@ export const startNetworkMonitor = (
   onOnline: () => void,
   onOffline: () => void,
 ): (() => void) => {
-  let lastStatus: boolean | null = null; // ✅ closure-scoped, not module-global
+  let lastStatus: boolean | null = null; 
 
   const unsubscribe = NetInfo.addEventListener((state: NetInfoState) => {
     // null = reachability check pending => optimistic online
     const online =
       state.isConnected === true && state.isInternetReachable !== false;
 
-    if (lastStatus === online) return; // ✅ duplicate prevention per-instance
+    if (lastStatus === online) return; 
     lastStatus = online;
 
     if (online) {

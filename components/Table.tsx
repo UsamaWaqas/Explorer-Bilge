@@ -1,7 +1,7 @@
-import React, { useMemo, useState, useEffect } from "react";
-import { View, Text, ScrollView, Pressable, ActivityIndicator } from "react-native";
-import CustomDropdown from "./Select";
 import { Ionicons } from "@expo/vector-icons";
+import React, { useEffect, useMemo, useState } from "react";
+import { Pressable, ScrollView, Text, View } from "react-native";
+import CustomDropdown from "./Select";
 
 export interface ColumnType<T> {
   key: keyof T;
@@ -21,6 +21,45 @@ interface GlobalTableProps<T> {
   onRowsPerPageChange?: (limit: number) => void;
   isLoading?: boolean;
 }
+
+// ─── Skeleton Cell ────────────────────────────────────────────────────────────
+
+function SkeletonCell({ width, isLast }: { width: number; isLast: boolean }) {
+  return (
+    <View
+      style={{ width }}
+      className={`px-3 py-3 border-b border-gray-200 justify-center ${
+        !isLast ? "border-r border-gray-200" : ""
+      }`}
+    >
+      <View className="h-3 bg-gray-200 rounded-full w-3/4" />
+    </View>
+  );
+}
+
+// ─── Skeleton Row ─────────────────────────────────────────────────────────────
+
+function SkeletonRow({
+  columns,
+  rowIndex,
+}: {
+  columns: { width: number }[];
+  rowIndex: number;
+}) {
+  return (
+    <View className={`flex-row ${rowIndex % 2 === 0 ? "bg-white" : "bg-gray-50"}`}>
+      {columns.map((col, colIndex) => (
+        <SkeletonCell
+          key={colIndex}
+          width={col.width}
+          isLast={colIndex === columns.length - 1}
+        />
+      ))}
+    </View>
+  );
+}
+
+// ─── Main Component ───────────────────────────────────────────────────────────
 
 function GlobalTable<T>({
   columns,
@@ -84,10 +123,13 @@ function GlobalTable<T>({
     { label: "50", value: 50 },
   ];
 
+  // Skeleton rows count — same as rowsPerPage for realistic look
+  const skeletonRows = Array.from({ length: rowsPerPage });
+
   return (
     <View className="flex border overflow-hidden border-gray-300 rounded-md">
 
-      {/* Horizontal Scroll — only for header + rows */}
+      {/* Horizontal Scroll — header + rows */}
       <ScrollView horizontal showsHorizontalScrollIndicator={false}>
         <View>
 
@@ -108,7 +150,24 @@ function GlobalTable<T>({
             ))}
           </View>
 
-          {/* Rows — only shown when data exists and not loading */}
+          {/* ── Skeleton Rows ── */}
+          {isLoading && (
+            <ScrollView
+              style={{ maxHeight }}
+              showsVerticalScrollIndicator={false}
+              nestedScrollEnabled
+            >
+              {skeletonRows.map((_, rowIndex) => (
+                <SkeletonRow
+                  key={`skeleton-${rowIndex}`}
+                  columns={columns}
+                  rowIndex={rowIndex}
+                />
+              ))}
+            </ScrollView>
+          )}
+
+          {/* ── Real Rows ── */}
           {!isLoading && paginatedData.length > 0 && (
             <ScrollView
               style={{ maxHeight }}
@@ -145,19 +204,15 @@ function GlobalTable<T>({
         </View>
       </ScrollView>
 
-      {/* ✅ Loading & Empty state OUTSIDE horizontal scroll — centers on screen */}
-      {isLoading ? (
-        <View className="py-10 items-center justify-center">
-          <ActivityIndicator size="large" color="#2C64B3" />
-        </View>
-      ) : paginatedData.length === 0 ? (
+      {/* Empty State */}
+      {!isLoading && paginatedData.length === 0 && (
         <View className="py-10 items-center justify-center">
           <Text className="text-sm text-gray-400">No data available</Text>
         </View>
-      ) : null}
+      )}
 
       {/* Footer */}
-      <View className="flex-row items-center justify-end px-3 py-2 border-t border-gray-200 bg-white">
+      <View className="flex-row items-center justify-around px-3 py-2 border-t border-gray-200 bg-white">
 
         <Text className="text-xs text-gray-500 mr-1.5">Rows per page:</Text>
 
@@ -166,31 +221,40 @@ function GlobalTable<T>({
           value={rowsPerPage}
           onChange={(val) => handleRowsPerPageChange(Number(val))}
           placeholder="10"
-          style={{ width: 65 }}
+          style={{ width: 60 }}
           compact
           noFloatingLabel
         />
 
         <View className="w-px h-4 bg-gray-200 mx-3" />
 
-        <Text className="text-xs text-gray-500 min-w-[80px] text-center">
-          {startItem}–{endItem} of {total}
-        </Text>
+        {/* Skeleton ke waqt placeholder dikhao */}
+        {isLoading ? (
+          <View className="h-3 bg-gray-200 rounded-full w-[80px]" />
+        ) : (
+          <Text className="text-xs text-gray-500 min-w-[80px] text-center">
+            {startItem}–{endItem} of {total}
+          </Text>
+        )}
 
         <View className="w-px h-4 bg-gray-200 mx-3" />
 
         <Pressable
           onPress={handlePrev}
-          disabled={page <= 1}
-          className={`p-1 rounded active:bg-gray-100 ${page <= 1 ? "opacity-30" : "opacity-100"}`}
+          disabled={page <= 1 || isLoading}
+          className={`p-1 rounded active:bg-gray-100 ${
+            page <= 1 || isLoading ? "opacity-30" : "opacity-100"
+          }`}
         >
           <Ionicons name="chevron-back" size={18} color="#374151" />
         </Pressable>
 
         <Pressable
           onPress={handleNext}
-          disabled={page >= totalPages}
-          className={`p-1 rounded active:bg-gray-100 ${page >= totalPages ? "opacity-30" : "opacity-100"}`}
+          disabled={page >= totalPages || isLoading}
+          className={`p-1 rounded active:bg-gray-100 ${
+            page >= totalPages || isLoading ? "opacity-30" : "opacity-100"
+          }`}
         >
           <Ionicons name="chevron-forward" size={18} color="#374151" />
         </Pressable>

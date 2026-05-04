@@ -7,8 +7,10 @@ import {
   Switch,
   ActivityIndicator,
   Modal,
+  ScrollView,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import {
   fetchDeviceNotificationService,
   fetchDeviceToggleStatusService,
@@ -25,6 +27,7 @@ export default function SettingsModal({
   onClose,
   onRefetch,
 }: SettingsModalProps) {
+  const insets = useSafeAreaInsets();
   const [notificationEmail, setNotificationEmail] = useState("");
   const [notificationNumber, setNotificationNumber] = useState("");
   const [alertStatus, setAlertStatus] = useState(false);
@@ -55,11 +58,9 @@ export default function SettingsModal({
           cached.alertStatus = toggleRes.value;
         }
 
-        // Online — cache update karo
         saveData(cacheKey, cached);
       })
       .catch(async () => {
-        // Offline — cache se load karo
         const cached = await loadData<any>(cacheKey, null);
         if (cached) {
           setNotificationEmail(cached.notificationEmail ?? "");
@@ -74,7 +75,6 @@ export default function SettingsModal({
     setAlertStatus(val);
     await toggleDeviceAlertService(row.device_id);
 
-    // Cache mein bhi update karo
     const cached = await loadData<any>(cacheKey, {});
     await saveData(cacheKey, { ...cached, alertStatus: val });
   }
@@ -87,7 +87,6 @@ export default function SettingsModal({
     );
 
     if (success) {
-      // Cache mein bhi update karo
       const cached = await loadData<any>(cacheKey, {});
       await saveData(cacheKey, {
         ...cached,
@@ -118,8 +117,14 @@ export default function SettingsModal({
         />
 
         {/* Bottom Sheet */}
-        <View className="bg-white rounded-t-2xl px-5 pt-5 pb-9">
-
+        <View
+          className="bg-white rounded-t-2xl px-5 pt-5"
+          style={{
+            maxHeight: "85%",
+            paddingBottom: insets.bottom + 16,
+             minHeight: "50%",
+          }}
+        >
           {/* Drag Handle */}
           <View className="w-10 h-1 bg-gray-300 rounded-full self-center mb-4" />
 
@@ -133,63 +138,70 @@ export default function SettingsModal({
             </Pressable>
           </View>
 
-          {loading ? (
-            <ActivityIndicator color="#2C64B3" className="my-6" />
-          ) : (
-            <>
-              {/* DevEUI */}
-              <View className="flex-row items-center mb-3.5">
-                <Text className="font-bold text-gray-700">DEVEUI: </Text>
-                <Text className="text-gray-700">{row?.devEUI ?? "---"}</Text>
-              </View>
+          <ScrollView
+            showsVerticalScrollIndicator={false}
+            bounces={false}
+            keyboardShouldPersistTaps="handled"
+            contentContainerStyle={{ paddingBottom: 16 }}
+          >
+            {loading ? (
+              <ActivityIndicator color="#2C64B3" className="my-6" />
+            ) : (
+              <>
+                {/* DevEUI */}
+                <View className="flex-row items-center mb-3.5">
+                  <Text className="font-bold text-gray-700">DEVEUI: </Text>
+                  <Text className="text-gray-700">{row?.devEUI ?? "---"}</Text>
+                </View>
 
-              {/* Alert Toggle */}
-              <View className="flex-row items-center mb-3.5">
-                <Text className="font-bold text-gray-700 flex-1">
-                  Alert ON/OFF:
+                {/* Alert Toggle */}
+                <View className="flex-row items-center mb-3.5">
+                  <Text className="font-bold text-gray-700 flex-1">
+                    Alert ON/OFF:
+                  </Text>
+                  <Switch
+                    value={alertStatus}
+                    onValueChange={handleAlertToggle}
+                    trackColor={{ false: "#d1d5db", true: "#2C64B3" }}
+                    thumbColor="#fff"
+                  />
+                </View>
+
+                {/* Notification Number */}
+                <Text className="text-xs font-semibold text-gray-700 mb-1">
+                  Notification Number
                 </Text>
-                <Switch
-                  value={alertStatus}
-                  onValueChange={handleAlertToggle}
-                  trackColor={{ false: "#d1d5db", true: "#2C64B3" }}
-                  thumbColor="#fff"
+                <TextInput
+                  className="border border-gray-300 rounded-lg px-3 py-2 text-[13px] mb-3 text-gray-900"
+                  placeholder="Notification Number"
+                  value={notificationNumber}
+                  onChangeText={setNotificationNumber}
+                  keyboardType="phone-pad"
                 />
-              </View>
 
-              {/* Notification Number */}
-              <Text className="text-xs font-semibold text-gray-700 mb-1">
-                Notification Number
-              </Text>
-              <TextInput
-                className="border border-gray-300 rounded-lg px-3 py-2 text-[13px] mb-3 text-gray-900"
-                placeholder="Notification Number"
-                value={notificationNumber}
-                onChangeText={setNotificationNumber}
-                keyboardType="phone-pad"
-              />
+                {/* Notification Email */}
+                <Text className="text-xs font-semibold text-gray-700 mb-1">
+                  Notification Email
+                </Text>
+                <TextInput
+                  className="border border-gray-300 rounded-lg px-3 py-2 text-[13px] mb-3 text-gray-900"
+                  placeholder="Notification Email"
+                  value={notificationEmail}
+                  onChangeText={setNotificationEmail}
+                  keyboardType="email-address"
+                  autoCapitalize="none"
+                />
 
-              {/* Notification Email */}
-              <Text className="text-xs font-semibold text-gray-700 mb-1">
-                Notification Email
-              </Text>
-              <TextInput
-                className="border border-gray-300 rounded-lg px-3 py-2 text-[13px] mb-3 text-gray-900"
-                placeholder="Notification Email"
-                value={notificationEmail}
-                onChangeText={setNotificationEmail}
-                keyboardType="email-address"
-                autoCapitalize="none"
-              />
-
-              {/* Save Button */}
-              <Pressable
-                className="bg-green-500 rounded-lg py-2.5 items-center mt-2 active:bg-green-600"
-                onPress={handleSave}
-              >
-                <Text className="text-white font-bold text-sm">Save</Text>
-              </Pressable>
-            </>
-          )}
+                {/* Save Button */}
+                <Pressable
+                  className="bg-green-500 rounded-lg py-2.5 items-center mt-2 active:bg-green-600"
+                  onPress={handleSave}
+                >
+                  <Text className="text-white font-bold text-sm">Save</Text>
+                </Pressable>
+              </>
+            )}
+          </ScrollView>
         </View>
       </View>
     </Modal>

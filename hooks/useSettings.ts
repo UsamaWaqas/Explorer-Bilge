@@ -1,10 +1,13 @@
 import { useCallback, useEffect, useState } from "react";
 import Toast from "react-native-toast-message";
-import { fetchTilesApi, saveToggleVisibility } from "../services/settingsService";
-import { TileItem } from "../types/settings.types";
-import { useNetwork } from "./useNetwork";
-import { saveData, loadData } from "../utils/asyncStorage";
 import { STORAGE_KEYS } from "../constants/keys";
+import {
+  fetchTilesApi,
+  saveToggleVisibility,
+} from "../services/settingsService";
+import { TileItem } from "../types/settings.types";
+import { loadData, saveData } from "../utils/asyncStorage";
+import { useNetwork } from "./useNetwork";
 
 export const useSettings = () => {
   const isConnected = useNetwork();
@@ -41,7 +44,7 @@ export const useSettings = () => {
             isProduct: true,
             name: product.name,
             isSelected: product?.notifie?.attributes?.some(
-              (tile: any) => tile?.is_visible
+              (tile: any) => tile?.is_visible,
             ),
             productId: product.id,
           });
@@ -89,7 +92,7 @@ export const useSettings = () => {
     fetchTiles();
   };
 
-  // ── Toggle ────────────────────────────────────────────────────────────────
+ 
   const toggleSwitch = (toggledItem: TileItem) => {
     const newStatus = !toggledItem.isSelected;
 
@@ -110,7 +113,7 @@ export const useSettings = () => {
             return { ...item, isSelected: newStatus };
           }
           return item;
-        })
+        }),
       );
     } else {
       setProductData((prev) =>
@@ -126,7 +129,7 @@ export const useSettings = () => {
             };
           }
           return item;
-        })
+        }),
       );
     }
   };
@@ -153,7 +156,7 @@ export const useSettings = () => {
           (apiItem) =>
             apiItem.id === currentItem.id &&
             apiItem.productId === currentItem.productId &&
-            apiItem.isProduct === currentItem.isProduct
+            apiItem.isProduct === currentItem.isProduct,
         );
 
         if (
@@ -194,7 +197,7 @@ export const useSettings = () => {
   const isAttributeDisabled = (item: TileItem): boolean => {
     if (item.isProduct) return false;
     const parentProduct = productData.find(
-      (i) => i.productId === item.productId && i.isProduct
+      (i) => i.productId === item.productId && i.isProduct,
     );
     return !parentProduct?.isSelected;
   };
