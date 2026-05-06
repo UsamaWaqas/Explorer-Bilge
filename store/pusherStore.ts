@@ -33,7 +33,9 @@ export const usePusherStore = create<PusherState>((set, get) => ({
   connect: async (authToken: string) => {
     console.log("[PusherStore] connecting...");
     const { status } = get();
-    if (status === "connecting" || status === "connected") return;
+
+    // ── FIX 2: sirf "connecting" block karo, "connected" nahi ─────────────────
+    if (status === "connecting") return;
 
     try {
       set({ status: "connecting" });
@@ -69,35 +71,24 @@ export const usePusherStore = create<PusherState>((set, get) => ({
     const updatedCallbacks = new Map(channelCallbacks);
     updatedCallbacks.set(channelName, existing);
     set({ channelCallbacks: updatedCallbacks });
-    console.log(
-      "[PusherStore] callback added for:",
-      channelName,
-      "| total:",
-      existing.size,
-    );
 
     if (activeChannels.has(channelName)) {
-      console.log(
-        "[PusherStore] already subscribed:",
-        channelName,
-        "| just added callback",
-      );
+      console.log("[PusherStore] already subscribed:", channelName, "| just added callback");
       return;
     }
 
     try {
+      // ── FIX 3: null check before using pusher ─────────────────────────────
       const pusher = getPusherInstance();
+      if (!pusher) {
+        console.warn("[PusherStore] no pusher instance, skipping subscribe:", channelName);
+        return;
+      }
+
       await pusher.subscribe({
         channelName,
         onEvent: (event) => {
-         
           const cbs = get().channelCallbacks.get(channelName);
-          console.log(
-            "[PusherStore] event on:",
-            channelName,
-            "| callbacks:",
-            cbs?.size,
-          );
           cbs?.forEach((cb) =>
             cb({ eventName: event.eventName, data: event.data }),
           );
@@ -119,17 +110,26 @@ export const usePusherStore = create<PusherState>((set, get) => ({
     const cbs = channelCallbacks.get(channelName);
     if (cbs) {
       cbs.delete(onEvent);
-      console.log(
-        "[PusherStore] callback removed:",
-        channelName,
-        "| remaining:",
-        cbs.size,
-      );
+      console.log("[PusherStore] callback removed:", channelName, "| remaining:", cbs.size);
 
-     
       if (cbs.size === 0) {
         try {
+          // ── FIX 4: null check — instance dead ho toh sirf state clean karo ──
           const pusher = getPusherInstance();
+
+          if (!pusher) {
+            console.warn("[PusherStore] no instance, cleaning state only:", channelName);
+            const updatedChannels = new Set(activeChannels);
+            updatedChannels.delete(channelName);
+            const updatedCallbacks = new Map(channelCallbacks);
+            updatedCallbacks.delete(channelName);
+            set({
+              activeChannels: updatedChannels,
+              channelCallbacks: updatedCallbacks,
+            });
+            return;
+          }
+
           await pusher.unsubscribe({ channelName });
 
           const updatedChannels = new Set(activeChannels);

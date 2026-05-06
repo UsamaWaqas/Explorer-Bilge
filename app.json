@@ -10,7 +10,7 @@
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
     "splash": {
-      "image": "./assets/svg/FavIcon_MyARMIT.png",
+      "image": "./assets/images/armIT_logo.png",
       "resizeMode": "contain",
       "backgroundColor": "#ffffff"
     },
@@ -54,7 +54,18 @@
       "expo-router",
       "expo-secure-store",
       "expo-dev-client",
-      "expo-font"
+      "expo-font",
+      "expo-web-browser",
+      [
+        "expo-build-properties",
+        {
+          "android": {
+            "extraPropertiesFiles": [
+              "./assets/adi-registration.properties"
+            ]
+          }
+        }
+      ]
     ],
     "experiments": {
       "typedRoutes": true,

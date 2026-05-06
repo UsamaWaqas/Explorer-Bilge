@@ -133,6 +133,8 @@ const TabLayout = () => {
           <Tabs.Screen name="device-events/[id]" options={{ href: null }} />
           <Tabs.Screen name="device-events/add-device/step-two/[id]" options={{ href: null }} />
           <Tabs.Screen name="device-events/add-device/step-three/[id]" options={{ href: null }} />
+          <Tabs.Screen name="device-events/add-device/checkout" options={{ href: null }} />
+          <Tabs.Screen name="device-events/add-device/success" options={{ href: null }} />
 
         </Tabs>
 

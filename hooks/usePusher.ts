@@ -1,28 +1,43 @@
 import { useQueryClient } from "@tanstack/react-query";
 import { useEffect, useRef } from "react";
+import { AppState, AppStateStatus } from "react-native";
 import { getPusherChannelName, PUSHER_EVENTS } from "../constants/pusher";
 import { useAuthStore } from "../store/authStore";
 import { usePusherStore } from "../store/pusherStore";
 
 // ── Pusher Init ─────────────────────────────────────────
 export function usePusherInit() {
-  const { connect, disconnect, status } = usePusherStore();
+  const { connect, disconnect } = usePusherStore();
   const token = useAuthStore((s) => s.token);
 
+  // ── FIX 5: AppState listener — minimize/background se wapas aao toh reconnect ──
   useEffect(() => {
     if (!token) {
       console.log("[PusherInit] no token, skipping connect");
       return;
     }
-    if (status === "connected" || status === "connecting") {
-      console.log("[PusherInit] already:", status);
-      return;
-    }
+
+    // Initial connect
     console.log("[PusherInit] connecting...");
     connect(token);
 
+    // App foreground/background handle karo
+    const handleAppStateChange = async (nextState: AppStateStatus) => {
+      if (nextState === "active") {
+        console.log("[PusherInit] app active → reconnecting...");
+        await disconnect();       // stale state clear
+        await connect(token);     // fresh connect
+      } else if (nextState === "background") {
+        console.log("[PusherInit] app background → disconnecting...");
+        await disconnect();
+      }
+    };
+
+    const subscription = AppState.addEventListener("change", handleAppStateChange);
+
     return () => {
       console.log("[PusherInit] cleanup → disconnecting");
+      subscription.remove();
       disconnect();
     };
   }, [token]);
@@ -35,7 +50,6 @@ export function usePusherEvent(onEvent: () => void) {
   const channelRef = useRef<string | null>(null);
   const onEventRef = useRef(onEvent);
   const callbackRef = useRef<((e: { eventName: string; data: unknown }) => void) | null>(null);
-  
 
   useEffect(() => {
     onEventRef.current = onEvent;
@@ -54,19 +68,15 @@ export function usePusherEvent(onEvent: () => void) {
     const channelName = getPusherChannelName(user.id);
     channelRef.current = channelName;
 
-    const callback = ({ eventName,data }: { eventName: string; data: unknown }) => {
-      
+    const callback = ({ eventName, data }: { eventName: string; data: unknown }) => {
       console.log("[PusherEvent] event received:", eventName);
 
       if (eventName !== PUSHER_EVENTS.DEVICE_DATA_UPDATED) {
-
-        
         console.log("[PusherEvent] ignoring event:", eventName);
         return;
       }
-        console.log("[PusherEvent] DATA:", JSON.stringify(data, null, 2));
 
-   
+      console.log("[PusherEvent] DATA:", JSON.stringify(data, null, 2));
       onEventRef.current();
     };
 
@@ -86,11 +96,10 @@ export function usePusherEvent(onEvent: () => void) {
   }, [user?.id, status]);
 }
 
-
+// ── Device-specific Pusher Hook ─────────────────────────
 export function usePusher(deviceId?: string | number) {
   const queryClient = useQueryClient();
   const deviceIdRef = useRef(deviceId);
-
 
   useEffect(() => {
     deviceIdRef.current = deviceId;

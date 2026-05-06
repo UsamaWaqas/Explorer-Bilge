@@ -1,5 +1,4 @@
-import * as PusherModule from 'pusher-js/react-native';
-
+import * as PusherModule from "pusher-js/react-native";
 
 console.log("[PusherDebug] ── MODULE INSPECTION START ──");
 console.log("[PusherDebug] typeof PusherModule:", typeof PusherModule);
@@ -9,34 +8,40 @@ const mod = PusherModule as any;
 
 console.log("[PusherDebug] typeof mod.default:", typeof mod.default);
 console.log("[PusherDebug] typeof mod.Pusher:", typeof mod.Pusher);
-console.log("[PusherDebug] typeof mod.default?.default:", typeof mod.default?.default);
-console.log("[PusherDebug] typeof mod.default?.Pusher:", typeof mod.default?.Pusher);
+console.log(
+  "[PusherDebug] typeof mod.default?.default:",
+  typeof mod.default?.default,
+);
+console.log(
+  "[PusherDebug] typeof mod.default?.Pusher:",
+  typeof mod.default?.Pusher,
+);
 
-
-if (mod.default && typeof mod.default === 'object') {
+if (mod.default && typeof mod.default === "object") {
   console.log("[PusherDebug] mod.default keys:", Object.keys(mod.default));
 }
 
-if (mod.default?.default && typeof mod.default.default === 'object') {
-  console.log("[PusherDebug] mod.default.default keys:", Object.keys(mod.default.default));
+if (mod.default?.default && typeof mod.default.default === "object") {
+  console.log(
+    "[PusherDebug] mod.default.default keys:",
+    Object.keys(mod.default.default),
+  );
 }
 
-// Try to find anything callable
 const allKeys = Object.keys(mod);
 allKeys.forEach((key) => {
   console.log(`[PusherDebug] mod["${key}"] type:`, typeof mod[key]);
 });
 
-// ─── Resolve the actual constructor ──────────────────────────────────────────
 const PusherClient =
-  (typeof mod.default?.default === 'function' ? mod.default.default : null) ??
-  (typeof mod.default === 'function' ? mod.default : null) ??
-  (typeof mod.Pusher === 'function' ? mod.Pusher : null) ??
-  (typeof mod.default?.Pusher === 'function' ? mod.default.Pusher : null) ??
+  (typeof mod.default?.default === "function" ? mod.default.default : null) ??
+  (typeof mod.default === "function" ? mod.default : null) ??
+  (typeof mod.Pusher === "function" ? mod.Pusher : null) ??
+  (typeof mod.default?.Pusher === "function" ? mod.default.Pusher : null) ??
   mod;
 
 console.log("[PusherDebug] resolved PusherClient type:", typeof PusherClient);
-console.log("[PusherDebug] is callable?", typeof PusherClient === 'function');
+console.log("[PusherDebug] is callable?", typeof PusherClient === "function");
 console.log("[PusherDebug] ── MODULE INSPECTION END ──");
 
 import { PUSHER_CONFIG } from "../constants/pusher";
@@ -46,30 +51,22 @@ const subscribedChannels: Map<string, any> = new Map();
 
 export async function createPusherInstance(authToken: string): Promise<void> {
   console.log("[Pusher] init starting...");
-  console.log("[Pusher] PusherClient type:", typeof PusherClient);
-  console.log("[Pusher] Is constructor?", typeof PusherClient === 'function');
-  console.log("[Pusher] Config:", {
-    appKey: PUSHER_CONFIG.appKey ? `${PUSHER_CONFIG.appKey.slice(0, 4)}...` : 'MISSING',
-    cluster: PUSHER_CONFIG.cluster ?? 'MISSING',
-    authEndpoint: PUSHER_CONFIG.authEndpoint ?? 'MISSING',
-  });
 
   if (pusherInstance) {
     console.log("[Pusher] Instance already exists, skipping init.");
     return;
   }
 
-  if (typeof PusherClient !== 'function') {
+  if (typeof PusherClient !== "function") {
     const err = new Error(
       `[Pusher] PusherClient is not a constructor. Got: ${typeof PusherClient}. ` +
-      `Module keys: ${Object.keys(mod).join(', ')}`
+        `Module keys: ${Object.keys(mod).join(", ")}`,
     );
     console.error("[Pusher] FATAL:", err.message);
     throw err;
   }
 
   try {
-    console.log("[Pusher] Creating new instance...");
     pusherInstance = new PusherClient(PUSHER_CONFIG.appKey, {
       cluster: PUSHER_CONFIG.cluster,
       forceTLS: true,
@@ -82,10 +79,6 @@ export async function createPusherInstance(authToken: string): Promise<void> {
         },
       },
     });
-
-    console.log("[Pusher] Instance created, waiting for connection...");
-    console.log("[Pusher] pusherInstance type:", typeof pusherInstance);
-    console.log("[Pusher] pusherInstance keys:", Object.keys(pusherInstance));
 
     return new Promise((resolve, reject) => {
       pusherInstance.connection.bind("connected", () => {
@@ -111,9 +104,12 @@ export async function createPusherInstance(authToken: string): Promise<void> {
         reject(err);
       });
 
-      pusherInstance.connection.bind("state_change", ({ previous, current }: { previous: string; current: string }) => {
-        console.log(`[Pusher] state: ${previous} → ${current}`);
-      });
+      pusherInstance.connection.bind(
+        "state_change",
+        ({ previous, current }: { previous: string; current: string }) => {
+          console.log(`[Pusher] state: ${previous} → ${current}`);
+        },
+      );
     });
   } catch (error) {
     console.error("[Pusher] critical initialization error:", error);
@@ -124,8 +120,6 @@ export async function createPusherInstance(authToken: string): Promise<void> {
 
 export async function destroyPusherInstance(): Promise<void> {
   console.log("[Pusher] destroying instance...");
-  console.log("[Pusher] active channels before destroy:", [...subscribedChannels.keys()]);
-
   subscribedChannels.clear();
 
   if (pusherInstance) {
@@ -137,13 +131,12 @@ export async function destroyPusherInstance(): Promise<void> {
   }
 }
 
+// ── FIX 1: throw hatao, null return karo ──────────────────────────────────────
 export function getPusherInstance() {
   if (!pusherInstance) {
-    console.error("[Pusher] getPusherInstance called but no instance exists.");
-    throw new Error("[Pusher] not initialized. Call createPusherInstance first.");
+    console.warn("[Pusher] getPusherInstance called but no instance exists.");
+    return null; // throw nahi, null return karo
   }
-
-  console.log("[Pusher] getPusherInstance called, connection state:", pusherInstance.connection.state);
 
   return {
     subscribe: async ({
@@ -179,7 +172,6 @@ export function getPusherInstance() {
       });
 
       console.log("[Pusher] subscribed to:", channelName);
-      console.log("[Pusher] total active channels:", subscribedChannels.size);
     },
 
     unsubscribe: async ({ channelName }: { channelName: string }) => {
@@ -191,7 +183,6 @@ export function getPusherInstance() {
       pusherInstance?.unsubscribe(channelName);
       subscribedChannels.delete(channelName);
       console.log("[Pusher] unsubscribed from:", channelName);
-      console.log("[Pusher] remaining channels:", [...subscribedChannels.keys()]);
     },
   };
 }
