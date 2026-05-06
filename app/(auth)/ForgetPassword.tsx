@@ -9,6 +9,7 @@ import * as yup from "yup";
 import { useState } from "react";
 import Toast from 'react-native-toast-message';
 import { post } from "../../api/apiHelper";
+import ArmITLogo from "../../assets/images/armIT_logo.svg";
 
 const schema = yup.object({
   email: yup.string().email("Invalid email").required("Email is required"),
@@ -53,11 +54,7 @@ export default function ForgetPassword() {
       showsVerticalScrollIndicator={false}
     >
       <View className="items-center mb-12 mt-8">
-        <Image
-          source={require("../../assets/images/armIT_logo.png")}
-          className="w-[280px] h-[100px]"
-          resizeMode="contain"
-        />
+       
       </View>
 
       {!successMessage ? (
@@ -73,7 +70,7 @@ export default function ForgetPassword() {
             </View>
           ) : (
             <View className="mb-8">
-              <Text className="text-[28px] font-bold text-[#2B6CB0] mb-3">Forgot Password?</Text>
+              <Text className="text-[24px] font-bold text-[#2B6CB0] mb-3">Forgot Password?</Text>
               <Text className="text-[16px] text-[#718096] leading-[24px]">Tell us your email address, and we'll get you back on track in no time.</Text>
             </View>
           )}

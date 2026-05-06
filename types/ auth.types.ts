@@ -4,6 +4,7 @@ export interface User {
   first_name: string;
   last_name: string;
   email: string;
+    euid: string;
   role_type_id: number;
   company_id: number;
   domain_id: number;
