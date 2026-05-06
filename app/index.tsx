@@ -13,6 +13,9 @@ const SAFE_ROUTES = [
   "/(tabs)/settings",
 ];
 
+const isHermes = () => !!(global as any).HermesInternal;
+console.log("Is Hermes enabled?", isHermes());
+
 export default function Index() {
   const router = useRouter();
   const { initializeAuth } = useAuthStore();
