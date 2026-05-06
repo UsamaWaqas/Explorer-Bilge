@@ -3,7 +3,7 @@ import { router, usePathname } from "expo-router";
 import { Pressable, StatusBar, Text, View } from "react-native";
 import GreenBell from "../assets/Icons/GreenBell";
 import WhiteBell from "../assets/Icons/WhiteBell";
-import ArmITLogo from "../assets/images/armIT_logo.svg";
+import ArmITLogo from "../assets/svg/armIT_logo.svg";
 import BurgerIcon from "../assets/svg/Burger.svg";
 import Ionicon from "../assets/svg/lock.svg";
 import { useAuthStore } from "../store/authStore";

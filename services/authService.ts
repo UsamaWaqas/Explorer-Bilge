@@ -7,8 +7,9 @@ export const loginService = async (email: string, password: string) => {
     "/api/users/login",
     { email, password },
     {},
-    false, 
+    false,
   );
+  console.log("Login Service Response:", response);
 
   if (response?.isOffline) {
     return {
@@ -23,6 +24,7 @@ export const loginService = async (email: string, password: string) => {
   }
 
   const token = response?.data?.token;
+  const euid = response?.data?.euid; // ← euid extract karo
   const user = response?.data?.user;
   const userDetail = response?.data?.userDetail;
   console.log("Login Response:", response.data.userDetail);
@@ -30,11 +32,13 @@ export const loginService = async (email: string, password: string) => {
   if (token && user) {
     await useAuthStore.getState().login({
       token,
-      user,
+      user: {
+        ...user,
+        euid,
+      },
       userDetail,
     });
 
-   
     Toast.show({
       type: "success",
       text1: "Logged in Successfully",

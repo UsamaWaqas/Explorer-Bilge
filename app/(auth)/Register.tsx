@@ -3,6 +3,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { yupResolver } from "@hookform/resolvers/yup";
 import { useState } from "react";
 import { Controller, useForm } from "react-hook-form";
+import ArmITLogo from "../../assets/images/armIT_logo.svg";
 import {
   ActivityIndicator,
   Image,
@@ -144,11 +145,7 @@ export default function Register() {
       >
         {/* Logo */}
         <View className="items-center mb-4">
-          <Image
-            source={require("../../assets/images/armIT_logo.png")}
-            className="w-[280px] h-[100px]"
-            resizeMode="contain"
-          />
+          <ArmITLogo width={240} height={100} />
         </View>
 
         {/* Header */}
@@ -163,7 +160,7 @@ export default function Register() {
 
         <View className="gap-3 mt-3">
           {/* First + Last Name */}
-          <View className="flex-row gap-2">
+          <View className="flex gap-2">
             <View className="flex-1">
               <Controller
                 control={control}
