@@ -54,9 +54,10 @@
       [
         "expo-adi-registration",
         {
-          "token": "DU7CREW0R5TO2AAAAAAAAAAAAAAAAAA"
+          "token": "ADI_REGISTRATION_TOKEN_REDACTED"
         }
       ]
+
     ],
     "experiments": {
       "typedRoutes": true,
