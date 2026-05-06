@@ -17,9 +17,7 @@
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "com.ChirpTech.myarmit",
-      "associatedDomains": [
-        "applinks:api.example.com"
-      ]
+      "associatedDomains": ["applinks:api.example.com"]
     },
     "android": {
       "package": "com.ChirpTech.myarmit",
@@ -39,10 +37,7 @@
               "pathPrefix": "/account-details"
             }
           ],
-          "category": [
-            "BROWSABLE",
-            "DEFAULT"
-          ]
+          "category": ["BROWSABLE", "DEFAULT"]
         }
       ]
     },
