@@ -57,13 +57,9 @@
       "expo-font",
       "expo-web-browser",
       [
-        "expo-build-properties",
+        "expo-adi-registration",
         {
-          "android": {
-            "extraPropertiesFiles": [
-              "./assets/adi-registration.properties"
-            ]
-          }
+          "token": "DU7CREW0R5TO2AAAAAAAAAAAAAAAAAA"
         }
       ]
     ],
