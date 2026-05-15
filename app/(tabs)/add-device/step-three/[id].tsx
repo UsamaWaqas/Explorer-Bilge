@@ -13,7 +13,7 @@ import {
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import Toast from "react-native-toast-message";
-import { post } from "../../../../../api/apiHelper";
+import { post } from "../../../../api/apiHelper";
 
 // ─── Component ────────────────────────────────────────────────────────────────
 
@@ -94,7 +94,7 @@ export default function AddDeviceStepThree() {
       {/* Logo */}
       <View className="items-center mb-4">
         <Image
-          source={require("../../../../../assets/images/armIT_logo.png")}
+          source={require("../../../../assets/images/armIT_logo.png")}
           className="w-[260px] h-[90px]"
           resizeMode="contain"
         />

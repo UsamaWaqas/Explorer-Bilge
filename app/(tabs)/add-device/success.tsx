@@ -1,15 +1,32 @@
 import { Ionicons } from "@expo/vector-icons";
+import { StackActions } from "@react-navigation/native";
+import { useNavigation } from "@react-navigation/native";
 import { useRouter } from "expo-router";
-import {
-  Image,
-  Pressable,
-  ScrollView,
-  Text,
-  View,
-} from "react-native";
+import { useEffect } from "react";
+import { BackHandler, Image, Pressable, ScrollView, Text, View } from "react-native";
+import { useAddDeviceStore } from "@/store/addDeviceStore";
 
 export default function AddDeviceSuccess() {
   const router = useRouter();
+  const navigation = useNavigation();
+  const { resetStore } = useAddDeviceStore();
+
+  const handleGoToDashboard = () => {
+    resetStore();
+    navigation.dispatch(StackActions.popToTop());
+    router.replace("/(tabs)/dashboard");
+  };
+
+  useEffect(() => {
+    const backHandler = BackHandler.addEventListener(
+      "hardwareBackPress",
+      () => {
+        handleGoToDashboard();
+        return true;
+      }
+    );
+    return () => backHandler.remove();
+  }, []);
 
   return (
     <ScrollView
@@ -20,7 +37,7 @@ export default function AddDeviceSuccess() {
       {/* Logo */}
       <View className="items-center pt-4 pb-2 px-6">
         <Image
-          source={require("../../../../assets/images/armIT_logo.png")}
+          source={require("../../../assets/images/armIT_logo.png")}
           style={{ width: 280, height: 100 }}
           resizeMode="contain"
         />
@@ -28,7 +45,6 @@ export default function AddDeviceSuccess() {
 
       {/* Head Card */}
       <View className="mx-4 mb-4 bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
-        {/* Progress Bar - 100% */}
         <View className="h-1.5 bg-gray-200">
           <View className="h-1.5 bg-[#2B6CB0]" style={{ width: "100%" }} />
         </View>
@@ -49,7 +65,6 @@ export default function AddDeviceSuccess() {
             </Text>
           </View>
 
-          {/* Status badge */}
           <View className="bg-emerald-50 border border-emerald-100 rounded-xl px-3 py-2 min-w-[80px] items-center">
             <Text className="text-[10px] text-emerald-500 font-medium mb-0.5">Status</Text>
             <Text className="text-sm font-bold text-emerald-600">Active</Text>
@@ -59,29 +74,25 @@ export default function AddDeviceSuccess() {
 
       {/* Success Card */}
       <View className="mx-4 bg-white rounded-2xl border border-slate-200 shadow-sm p-8 items-center">
-        {/* Green Circle Check */}
         <View className="w-20 h-20 rounded-full bg-emerald-50 items-center justify-center mb-5">
           <Ionicons name="checkmark-circle" size={52} color="#059669" />
         </View>
 
-        {/* Title */}
         <Text className="text-xl font-bold text-[#374151] mb-3">
           Payment Successful
         </Text>
 
-        {/* Description */}
         <Text className="text-sm text-[#9CA3AF] text-center leading-5 max-w-xs">
           Thank you. Your selected plan has been activated successfully. You can now view and manage your devices from the dashboard.
         </Text>
 
-        {/* Go to Dashboard */}
         <Pressable
-          onPress={() => router.replace("/(tabs)/devices")}
+          onPress={handleGoToDashboard}
           className="mt-8 h-11 w-52 flex-row items-center justify-center gap-2 bg-white border border-[#6B7280] rounded-xl"
         >
           <Ionicons name="grid-outline" size={18} color="#2B6CB0" />
           <Text className="text-[#2B6CB0] font-bold text-sm">
-            Go to Devices
+            Go to Dashboard
           </Text>
         </Pressable>
       </View>

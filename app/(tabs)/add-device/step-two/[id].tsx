@@ -12,9 +12,9 @@ import {
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import Toast from "react-native-toast-message";
-import { post } from "../../../../../api/apiHelper";
-import { useAuthStore } from "../../../../../store/authStore";
-import ArmITLogo from "../../../../../assets/images/armIT_logo.svg";
+import { post } from "../../../../api/apiHelper";
+import { useAuthStore } from "../../../../store/authStore";
+import ArmITLogo from "../../../../assets/images/armIT_logo.svg";
 // ─── Types ────────────────────────────────────────────────────────────────────
 
 interface Plan {
@@ -314,7 +314,7 @@ console.log("euid param:", euid);
       }
 
       router.push({
-        pathname: "/(tabs)/device-events/add-device/checkout" as any,
+      pathname: "/(tabs)/add-device/checkout" as any,
         params: {
           url: response.checkout_url,
           deviceIds: JSON.stringify(deviceIds),

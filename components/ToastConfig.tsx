@@ -42,14 +42,14 @@ const ToastCard = ({
         shadowOffset: { width: 0, height: 8 },
         shadowOpacity: Platform.OS === "ios" ? 0.08 : 0.15,
         shadowRadius: 16,
-        elevation: 99999,   // ← fix: Modal ke upar aane ke liye
-        zIndex: 99999,      // ← fix
+        elevation: 99999,
+        zIndex: 99999,
       }}
     >
-      <View className="flex-row items-center">
+      <View className="flex-row items-start">
 
-        {/* Icon */}
-        <View className="w-11">
+        {/* Icon — items-start taake long message mein icon upar rahe */}
+        <View className="w-11 mt-0.5">
           <IconWrapper
             name={iconName}
             glowClass={glowClass}
@@ -59,30 +59,31 @@ const ToastCard = ({
 
         {/* Text */}
         <View className="flex-1 ml-3">
-          <View className="flex-row items-center gap-1.5">
-            <View className={`w-1.5 h-1.5 rounded-full ${dotClass}`} />
+          <View className="flex-row items-center gap-1.5 flex-wrap">
+            <View className={`w-1.5 h-1.5 rounded-full flex-shrink-0 ${dotClass}`} />
             <Text
-              className="text-gray-900 text-[13.5px] font-bold tracking-wide flex-shrink"
-              numberOfLines={1}
+              className="text-gray-900 text-[13.5px] font-bold tracking-wide"
+              style={{ flexShrink: 1 }}
+              // ✅ numberOfLines hata diya — puri heading show hogi
             >
               {props.text1}
             </Text>
           </View>
 
-          {props.text2 && (
+          {props.text2 ? (
             <Text
               className="text-gray-500 text-[12px] mt-1 leading-[17px] pl-3"
-              numberOfLines={2}
+              // ✅ numberOfLines hata diya — poora message show hoga
             >
               {props.text2}
             </Text>
-          )}
+          ) : null}
         </View>
 
         {/* Close Button */}
         <Pressable
           onPress={() => Toast.hide()}
-          className="w-7 h-7 bg-gray-100 rounded-full items-center justify-center ml-2"
+          className="w-7 h-7 bg-gray-100 rounded-full items-center justify-center ml-2 mt-0.5"
         >
           <Ionicons name="close" size={14} color="#9CA3AF" />
         </Pressable>
