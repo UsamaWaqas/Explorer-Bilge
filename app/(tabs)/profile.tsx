@@ -133,46 +133,47 @@ export default function MyProfile() {
   const [country, setCountry] = useState("");
   const [state, setState] = useState("");
 
-  // ── Fetch user details on mount ─────────────────────────────────────────
-  useEffect(() => {
-    async function fetchUserDetails() {
-      setFetchLoading(true);
-      const res = await get(`/api/user/details/${userId}`);
-      if (!res?.error && res?.success) {
-        const d = res.data;
-        console.log("Fetched User Detail:", d);
 
-        setUserDetail({
-          phone_notification: !!d?.phone_notification,
-          email_notification: !!d?.email_notification,
-          notification_phone: d?.notification_phone ?? "",
-          notification_email: d?.notification_email ?? "",
-        });
+  async function fetchUserDetails() {
+    setFetchLoading(true);
+    const res = await get(`/api/user/details/${userId}`);
+    if (!res?.error && res?.success) {
+      const d = res.data;
+      console.log("Fetched User Detail:", d);
 
-        setFirstName(d?.first_name || "");
-        setLastName(d?.last_name || "");
-        setEmail(d?.email || "");
-        setPhoneNumber(d?.phone_number ? String(d.phone_number) : "");
-        setNotificationPhone(d?.notification_phone || "");
-        setNotificationEmail(d?.notification_email || "");
-        setAddress1(d?.address_1 || "");
-        setAddress2(d?.address_2 || "");
-        setCity(d?.city || "");
-        setPostalCode(d?.postal_code || "");
-        setCountry(d?.country || "");
-        setState(d?.state || "");
-      }
-      setFetchLoading(false);
+      setUserDetail({
+        phone_notification: !!d?.phone_notification,
+        email_notification: !!d?.email_notification,
+        notification_phone: d?.notification_phone ?? "",
+        notification_email: d?.notification_email ?? "",
+      });
+
+      setFirstName(d?.first_name || "");
+      setLastName(d?.last_name || "");
+      setEmail(d?.email || "");
+      setPhoneNumber(d?.phone_number ? String(d.phone_number) : "");
+      setNotificationPhone(d?.notification_phone || "");
+      setNotificationEmail(d?.notification_email || "");
+      setAddress1(d?.address_1 || "");
+      setAddress2(d?.address_2 || "");
+      setCity(d?.city || "");
+      setPostalCode(d?.postal_code || "");
+      setCountry(d?.country || "");
+      setState(d?.state || "");
     }
+    setFetchLoading(false);
+  }
+
+
+  useEffect(() => {
     fetchUserDetails();
   }, []);
 
-  // ── Toggle notification switches ────────────────────────────────────────
+
   async function toggleSwitch(type: string, val: boolean) {
     const key =
       type === "email" ? "email_notification" : "phone_notification";
 
-    
     setUserDetail({
       phone_notification: !!(userDetail?.phone_notification),
       email_notification: !!(userDetail?.email_notification),
@@ -188,7 +189,6 @@ export default function MyProfile() {
       if (!res?.error && res?.success) {
         const updated = res?.data;
         if (updated) {
-         
           setUserDetail({
             phone_notification: !!updated.phone_notification,
             email_notification: !!updated.email_notification,
@@ -212,7 +212,6 @@ export default function MyProfile() {
         });
       }
     } catch {
-   
       setUserDetail({
         phone_notification: !!(userDetail?.phone_notification),
         email_notification: !!(userDetail?.email_notification),
@@ -225,11 +224,11 @@ export default function MyProfile() {
     }
   }
 
-  // ── Save profile changes ─────────────────────────────────────────────────
+
   async function handleSave() {
     setIsSubmitting(true);
     try {
-      await put(`/api/detail-user/${userId}`, {
+      const res = await put(`/api/detail-user/${userId}`, {
         first_name: firstName,
         last_name: lastName,
         email,
@@ -243,6 +242,11 @@ export default function MyProfile() {
         city,
         zipCode: postalCode,
       });
+
+
+      if (!res?.error && res?.success) {
+        await fetchUserDetails();
+      }
     } finally {
       setIsSubmitting(false);
     }
@@ -337,7 +341,8 @@ export default function MyProfile() {
           onChangeText={setState}
           autoCapitalize="words"
         />
-{/* 
+
+        {/* 
         <ToggleField
           label="Phone Notification Toggle"
           sublabel="TEXT / SMS"

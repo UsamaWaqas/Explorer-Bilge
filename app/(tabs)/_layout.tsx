@@ -76,7 +76,7 @@ const TabLayout = () => {
 
           {/* 3 — Add CENTER green button */}
           <Tabs.Screen
-            name="add"
+            name="add-device"
             options={{
               title: "Add",
               tabBarIcon: () => (
@@ -84,7 +84,7 @@ const TabLayout = () => {
                   style={{
                     backgroundColor: "#4CAF50",
                     width: 48,
-                    height:48,
+                    height: 48,
                     borderRadius: 28,
                     justifyContent: "center",
                     alignItems: "center",
@@ -131,18 +131,16 @@ const TabLayout = () => {
           <Tabs.Screen name="Change-password" options={{ href: null }} />
           <Tabs.Screen name="notification-rules" options={{ href: null }} />
           <Tabs.Screen name="device-events/[id]" options={{ href: null }} />
-          <Tabs.Screen name="device-events/add-device/step-two/[id]" options={{ href: null }} />
-          <Tabs.Screen name="device-events/add-device/step-three/[id]" options={{ href: null }} />
-          <Tabs.Screen name="device-events/add-device/checkout" options={{ href: null }} />
-          <Tabs.Screen name="device-events/add-device/success" options={{ href: null }} />
-
+          <Tabs.Screen name="add-device/step-two/[id]" options={{ href: null }} />
+          <Tabs.Screen name="add-device/step-three/[id]" options={{ href: null }} />
+          <Tabs.Screen name="add-device/checkout" options={{ href: null }} />
+          <Tabs.Screen name="add-device/success" options={{ href: null }} />
         </Tabs>
 
         <NetInfoBanner />
         <GlobalDrawer>
           <Sidebar />
         </GlobalDrawer>
-
       </SafeAreaView>
 
       <Toast

@@ -10,12 +10,13 @@ import {
 import GlobalInput from "../../components/Input";
 
 import { yupResolver } from "@hookform/resolvers/yup";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Controller, useForm } from "react-hook-form";
 import * as yup from "yup";
 import { loginService } from "../../services/authService";
 
 import ArmITLogo from "../../assets/images/armIT_logo.svg";
+
 
 
 const schema = yup.object({
@@ -35,15 +36,43 @@ export default function Login() {
     resolver: yupResolver(schema),
   });
 
-  const onSubmit = async (data: any) => {
+const onSubmit = async (data: any) => {
+  try {
     setIsLoading(true);
+
     const result = await loginService(data.email, data.password);
-    setIsLoading(false);
 
     if (result?.success) {
       router.replace("/(tabs)/dashboard");
+      return;
     }
-  };
+
+    switch (result?.reason) {
+      case "failed_profile":
+        router.push({
+          pathname: "/(auth)/account-details/[id]",
+          params: { id: result.userId },
+        });
+        break;
+
+     case "failed_device":
+  router.push({
+    pathname: "/(auth)/device-activation/step-one/[id]",
+    params: { id: result.userId },
+  });
+  break;
+
+      default:
+        break;
+    }
+  } finally {
+    setIsLoading(false);
+  }
+};
+
+  useEffect(() => {
+  console.log("=== LOGIN MOUNTED ===");
+}, []);
 
   return (
     <ScrollView
@@ -138,7 +167,7 @@ export default function Login() {
       </View>
 
       {/* Create Account */}
-      <View className="mb-10 text-center">
+      <View className="mb-10  text-center">
         <Text className="text-[15px] text-[#4A5568] leading-[22px] text-center">
           New to <Text className="font-semibold">myARMIT?</Text> Just click the
           link below to{"\n"}create a new account.

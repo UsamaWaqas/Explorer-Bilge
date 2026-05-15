@@ -1,8 +1,7 @@
 {
   "expo": {
-    "name": "My-Armit",
-    "slug": "my-armit",
-    "owner": "chirptech",
+    "name": "MyARMIT",
+    "slug": "myarmit",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/svg/FavIcon_MyARMIT.png",
@@ -10,17 +9,18 @@
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
     "splash": {
-      "image": "./assets/images/armIT_logo.png",
-      "resizeMode": "contain",
-      "backgroundColor": "#ffffff"
+      "image": "./assets/svg/FavIcon_MyARMIT.png",
+      "resizeMode": "contain"
     },
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.ChirpTech.myarmit",
-      "associatedDomains": ["applinks:aquamax-devstage.jove1.com"]
+      "bundleIdentifier": "com.goarmit.app",
+      "associatedDomains": [
+        "applinks:aquamax-devstage.jove1.com"
+      ]
     },
     "android": {
-      "package": "com.ChirpTech.myarmit",
+      "package": "com.goarmit.app",
       "adaptiveIcon": {
         "foregroundImage": "./assets/svg/armit_final.png",
         "backgroundColor": "#ffffff"
@@ -37,7 +37,10 @@
               "pathPrefix": "/account-details"
             }
           ],
-          "category": ["BROWSABLE", "DEFAULT"]
+          "category": [
+            "BROWSABLE",
+            "DEFAULT"
+          ]
         }
       ]
     },
@@ -57,7 +60,6 @@
           "token": "DU7CREWOR5TO2AAAAAAAAAAAAA"
         }
       ]
-
     ],
     "experiments": {
       "typedRoutes": true,
@@ -66,7 +68,7 @@
     "extra": {
       "router": {},
       "eas": {
-        "projectId": "952d9fd1-405b-4409-bd1c-872d9c807ff2"
+        "projectId": "e0075689-cbdb-4411-b197-d6090442cfe4"
       }
     }
   }

@@ -3,18 +3,17 @@ import { Ionicons } from "@expo/vector-icons";
 import { yupResolver } from "@hookform/resolvers/yup";
 import { useState } from "react";
 import { Controller, useForm } from "react-hook-form";
-import ArmITLogo from "../../assets/images/armIT_logo.svg";
 import {
   ActivityIndicator,
-  Image,
   Pressable,
   ScrollView,
   Text,
-  View,
+  View
 } from "react-native";
 import Toast from "react-native-toast-message";
 import * as yup from "yup";
 import { post } from "../../api/apiHelper";
+import ArmITLogo from "../../assets/images/armIT_logo.svg";
 import Thanks from "./Thanks";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -69,7 +68,7 @@ export default function Register() {
     setIsLoading(true);
 
     try {
-      const response = await post("/api/users/register", data, {}, false);
+      const response = await post("/api/users/register", { ...data, residence_customer: 1 }, {}, false);
 
       console.log("FULL RESPONSE:", response);
 
@@ -129,7 +128,7 @@ export default function Register() {
       <Text className="text-red-500 text-xs mt-1 ml-1">{message}</Text>
     ) : null;
 
-  // ─── THANK YOU SCREEN ─────────────────────────
+ 
   if (showThanks) {
     return <Thanks email={registeredEmail} />;
   }

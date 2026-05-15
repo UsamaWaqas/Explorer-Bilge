@@ -1,35 +1,29 @@
+import { useEffect, useState } from "react";
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
-import { useState } from "react";
 import { Pressable, ScrollView, Text, View } from "react-native";
+import { get, post } from "../api/apiHelper";
 import { logoutService } from "../services/authService";
-import { post } from "../api/apiHelper";
-import AnimatedSwitch from "./Switch";
-import GlobalInput from "./Input";
 import { useAuthStore } from "../store/authStore";
 import { useDrawerStore } from "../store/ModalStore";
 import { UserDetail } from "../types/ auth.types";
+import GlobalInput from "./Input";
+import AnimatedSwitch from "./Switch";
 
 export default function Sidebar() {
   const router = useRouter();
   const close = useDrawerStore((s) => s.close);
+  const isOpen = useDrawerStore((s) => s.isOpen);
 
   const user = useAuthStore((state) => state.user);
   const userDetail = useAuthStore((state) => state.userDetail);
   const setUserDetail = useAuthStore((state) => state.setUserDetail);
 
-  const userName = user ? `${user.first_name} ${user.last_name}`.trim() : "";
-  const userEmail = user?.email || "";
 
-  const getInitials = (name: string) => {
-    if (!name) return "MN";
-    return name
-      .split(" ")
-      .map((n) => n[0])
-      .join("")
-      .toUpperCase()
-      .slice(0, 2);
-  };
+  const [sidebarName, setSidebarName] = useState(
+    user ? `${user.first_name} ${user.last_name}`.trim() : ""
+  );
+  const [sidebarEmail, setSidebarEmail] = useState(user?.email || "");
 
   const [textSmsEnabled, setTextSmsEnabled] = useState<boolean>(
     !!userDetail?.phone_notification
@@ -51,6 +45,44 @@ export default function Sidebar() {
       : userDetail?.notification_email ?? ""
   );
 
+
+useEffect(() => {
+  if (!isOpen) return;
+
+  async function fetchUserDetail() {
+    try {
+      const res = await get(`/api/user/details/${user?.id}`);
+      if (res?.success && res?.data) {
+        const d = res.data;
+        setSidebarName(`${d.first_name || ""} ${d.last_name || ""}`.trim());
+        setSidebarEmail(d.email || "");
+        setTextSmsEnabled(!!d.phone_notification);
+        setEmailNotifEnabled(!!d.email_notification);
+        setPhoneNumber(d.notification_phone ?? "");
+        setEmailAddress(d.notification_email ?? "");
+        setUserDetail({
+          phone_notification: !!d.phone_notification,
+          email_notification: !!d.email_notification,
+          notification_phone: d.notification_phone ?? "",
+          notification_email: d.notification_email ?? "",
+        });
+      }
+    } catch (error) {
+      console.error("Error fetching user detail:", error);
+    }
+  }
+  fetchUserDetail();
+}, [isOpen]); 
+  const getInitials = (name: string) => {
+    if (!name) return "MN";
+    return name
+      .split(" ")
+      .map((n) => n[0])
+      .join("")
+      .toUpperCase()
+      .slice(0, 2);
+  };
+
   async function toggleSwitch(type: "phone" | "email") {
     const isPhone = type === "phone";
 
@@ -65,7 +97,6 @@ export default function Sidebar() {
 
       if (res?.success) {
         const key = isPhone ? "phone_notification" : "email_notification";
-        // API returns 0 or 1 — keep as number to match UserDetail type
         const value: number = res?.data?.[key] ?? 0;
 
         const updated: UserDetail = {
@@ -78,13 +109,11 @@ export default function Sidebar() {
         if (isPhone) setTextSmsEnabled(!!value);
         else setEmailNotifEnabled(!!value);
       } else {
-      
         if (isPhone) setTextSmsEnabled((prev) => !prev);
         else setEmailNotifEnabled((prev) => !prev);
       }
     } catch (error) {
       console.error("error toggling notification", error);
-    
       if (isPhone) setTextSmsEnabled((prev) => !prev);
       else setEmailNotifEnabled((prev) => !prev);
     } finally {
@@ -111,28 +140,28 @@ export default function Sidebar() {
 
   const handleAddDevice = () => {
     close();
-    router.push("/(tabs)/add");
+    router.push("/(tabs)/add-device");
   };
 
   return (
-    <ScrollView className="p-4  " showsVerticalScrollIndicator={false}>
+    <ScrollView className="p-4" showsVerticalScrollIndicator={false}>
       <Text className="text-[#2C64B3] text-lg font-bold mb-4">PROFILE</Text>
 
       <View className="flex flex-col gap-y-3">
 
-        {/* My Account Card */}
+        {/* User Info Card */}
         <View className="bg-[#C9D0D3] h-24 border overflow-hidden border-[#9f9f9f] w-full rounded-md flex-row items-center px-3">
           <View className="w-14 h-14 bg-[#2C64B3] rounded-full items-center justify-center">
             <Text className="text-white text-xl font-bold">
-              {getInitials(userName)}
+              {getInitials(sidebarName)}
             </Text>
           </View>
           <View className="overflow-hidden ml-3">
             <Text className="text-gray-800 text-xl font-bold">
-              {userName || "User Name"}
+              {sidebarName || "My Profile"}
             </Text>
             <Text className="text-[#6B7280] text-sm">
-              {userEmail || "My Account"}
+              {sidebarEmail || "My Account"}
             </Text>
           </View>
         </View>

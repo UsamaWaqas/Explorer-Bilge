@@ -1,14 +1,13 @@
 import { get } from "../api/apiHelper";
 
 export const getDevicesList = async () => {
-  // Fetch boats and devices separately (same as web)
   const [boatsRes, devicesRes] = await Promise.all([
     get("/api/boats/user/list"),
     get("/api/devices/users/list"),
   ]);
 
-  // console.log("Fetched boats:", boatsRes);
-  // console.log("Fetched devices:", devicesRes);
+  console.log("Fetched boats:", boatsRes);
+  console.log("Fetched devices:", devicesRes);
 
   const boats = boatsRes?.error
     ? []
@@ -40,7 +39,6 @@ export const getDeviceDetails = async (device: {
   where_from?: string;
   assign_entity_id?: number;
 }) => {
-  // Marina devices use boat_id, others use user_device_id (same as web)
   const path =
     device.where_from === "marina"
       ? `/api/boats/get-boat/attributes?boat_id=${device.assign_entity_id}`
