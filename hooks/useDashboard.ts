@@ -27,21 +27,28 @@ export const useDashboard = () => {
   const isConnectedRef = useRef(isConnected);
   const previousDeviceRef = useRef<DeviceOption | null>(null);
 
-  const [selectedDevice, setSelectedDevice] = useState<DeviceOption | null>(null);
-  const [isRefreshing, setIsRefreshing] = useState(false); 
+  const [selectedDevice, setSelectedDevice] = useState<DeviceOption | null>(
+    null,
+  );
+  const [isRefreshing, setIsRefreshing] = useState(false);
 
   const selectedDeviceRef = useRef<string | undefined>(undefined);
   useEffect(() => {
     selectedDeviceRef.current = selectedDevice?.value;
-    console.log("[Dashboard] selectedDevice ref updated:", selectedDevice?.value);
+    console.log(
+      "[Dashboard] selectedDevice ref updated:",
+      selectedDevice?.value,
+    );
   }, [selectedDevice?.value]);
 
   usePusherEvent(() => {
-    
-    queryClient.invalidateQueries({ queryKey: ["monitoring", selectedDeviceRef.current] });
+    queryClient.invalidateQueries({
+      queryKey: ["monitoring", selectedDeviceRef.current],
+    });
   });
 
-  const { weatherData, loadingWeather, fetchWeather, formatTime } = useWeather();
+  const { weatherData, loadingWeather, fetchWeather, formatTime } =
+    useWeather();
 
   useEffect(() => {
     isConnectedRef.current = isConnected;
@@ -60,21 +67,26 @@ export const useDashboard = () => {
   }, [isConnected]);
 
   // ── Focus Refetch ──────────────────────────────────────
- useFocusEffect(
-  useCallback(() => {
-    console.log("[Focus] fired, device:", selectedDeviceRef.current, "connected:", isConnectedRef.current);
-    
-    if (!isConnectedRef.current) return;
+  useFocusEffect(
+    useCallback(() => {
+      console.log(
+        "[Focus] fired, device:",
+        selectedDeviceRef.current,
+        "connected:",
+        isConnectedRef.current,
+      );
 
-    queryClient.invalidateQueries({ queryKey: ["devices"] });
+      if (!isConnectedRef.current) return;
 
-    if (selectedDeviceRef.current) {
-      queryClient.invalidateQueries({
-        queryKey: ["monitoring", selectedDeviceRef.current],
-      });
-    }
-  }, []),
-);
+      queryClient.invalidateQueries({ queryKey: ["devices"] });
+
+      if (selectedDeviceRef.current) {
+        queryClient.invalidateQueries({
+          queryKey: ["monitoring", selectedDeviceRef.current],
+        });
+      }
+    }, []),
+  );
 
   // ── onRefresh ──────────────────────────────────────────
   const onRefresh = useCallback(async () => {
@@ -91,23 +103,35 @@ export const useDashboard = () => {
     setIsRefreshing(true);
     await Promise.all([
       queryClient.invalidateQueries({ queryKey: ["devices"] }),
-      queryClient.invalidateQueries({ queryKey: ["monitoring", selectedDevice?.value] }),
-      queryClient.invalidateQueries({ queryKey: ["tides", selectedDevice?.value] }),
+      queryClient.invalidateQueries({
+        queryKey: ["monitoring", selectedDevice?.value],
+      }),
+      queryClient.invalidateQueries({
+        queryKey: ["tides", selectedDevice?.value],
+      }),
     ]);
     setIsRefreshing(false);
   }, [selectedDevice?.value]);
 
   // ── 1. Devices ─────────────────────────────────────────
-  const { data: deviceOptions = [], isLoading: loadingDevices } = useQuery<DeviceOption[]>({
+  const { data: deviceOptions = [], isLoading: loadingDevices } = useQuery<
+    DeviceOption[]
+  >({
     queryKey: ["devices"],
     queryFn: async () => {
+       console.log("[Devices] queryFn called!"); 
       if (!isConnectedRef.current) {
         const cached = await loadData<DeviceOption[]>(STORAGE_KEYS.DEVICES, []);
         return cached;
       }
 
       const result = await getDevicesList();
-      console.log("[Devices] raw device object:", JSON.stringify(result.data[0]));
+        console.log("[Devices] API response:", JSON.stringify(result.data.map((d: Device) => d.device_name)));
+
+      console.log(
+        "[Devices] raw device object:",
+        JSON.stringify(result.data[0]),
+      );
 
       if (result.success && result.data.length > 0) {
         const options: DeviceOption[] = result.data.map((device: Device) => ({
@@ -121,20 +145,28 @@ export const useDashboard = () => {
 
       return [];
     },
-    staleTime: 1000 * 60 * 5,
+    // staleTime: 1000 * 60 * 5,
     gcTime: 1000 * 60 * 10,
     networkMode: "always",
   });
 
-  // ── Set first device ────────────────────────────────────
-  useEffect(() => {
-    if (deviceOptions.length > 0 && !selectedDevice) {
-      setSelectedDevice(deviceOptions[0]);
-      previousDeviceRef.current = deviceOptions[0];
-    }
-  }, [deviceOptions]);
 
-  // ── Fetch weather ───────────────────────────────────────
+useEffect(() => {
+  if (deviceOptions.length === 0) return;
+
+  if (!selectedDevice) {
+    setSelectedDevice(deviceOptions[0]);
+    previousDeviceRef.current = deviceOptions[0];
+  } else {
+    const refreshed = deviceOptions.find(d => d.value === selectedDevice.value);
+    if (refreshed) {
+      setSelectedDevice(refreshed);
+      previousDeviceRef.current = refreshed;
+    }
+  }
+}, [deviceOptions]);
+
+
   useEffect(() => {
     if (selectedDevice?.raw) {
       fetchWeather(selectedDevice.raw);
@@ -156,61 +188,64 @@ export const useDashboard = () => {
       return res.data?.stations ?? [];
     },
     enabled: !!selectedDevice?.value && isMarinaDevice && isConnected === true,
-    staleTime: 1000 * 60 * 60,
+    // staleTime: 1000 * 60 * 60,
     gcTime: 1000 * 60 * 60 * 2,
     networkMode: "always",
   });
 
   // ── 3. Monitoring ──────────────────────────────────────
-  const { data: monitoringData, isLoading: loadingMonitoring } = useQuery<MonitoringCache>({
-    queryKey: ["monitoring", selectedDevice?.value],
-    queryFn: async () => {
-      const device = selectedDevice!.raw;
-      const key = `${STORAGE_KEYS.MONITORING}_${device.device_id}`;
+  const { data: monitoringData, isLoading: loadingMonitoring } =
+    useQuery<MonitoringCache>({
+      queryKey: ["monitoring", selectedDevice?.value],
+      queryFn: async () => {
+        const device = selectedDevice!.raw;
+        const key = `${STORAGE_KEYS.MONITORING}_${device.device_id}`;
 
-      if (!isConnectedRef.current) {
-        const cached = await loadData<MonitoringCache>(key, null as any);
-        return cached ?? { tilesConfig: [], alertCount: null, isArmed: false };
-      }
+        if (!isConnectedRef.current) {
+          const cached = await loadData<MonitoringCache>(key, null as any);
+          return (
+            cached ?? { tilesConfig: [], alertCount: null, isArmed: false }
+          );
+        }
 
-      if (
-        previousDeviceRef.current &&
-        previousDeviceRef.current.raw.device_id !== device.device_id
-      ) {
-        const oldKey = `${STORAGE_KEYS.MONITORING}_${previousDeviceRef.current.raw.device_id}`;
-        await removeData(oldKey);
-      }
+        if (
+          previousDeviceRef.current &&
+          previousDeviceRef.current.raw.device_id !== device.device_id
+        ) {
+          const oldKey = `${STORAGE_KEYS.MONITORING}_${previousDeviceRef.current.raw.device_id}`;
+          await removeData(oldKey);
+        }
 
-      const result = await getDeviceDetails(device);
+        const result = await getDeviceDetails(device);
 
-      if (result.success && result.data) {
-        const xups = result.data.xups;
-        const valuesObj = Array.isArray(result.data.deviceValues)
-          ? result.data.deviceValues[0]
-          : result.data.deviceValues;
+        if (result.success && result.data) {
+          const xups = result.data.xups;
+          const valuesObj = Array.isArray(result.data.deviceValues)
+            ? result.data.deviceValues[0]
+            : result.data.deviceValues;
 
-        const tiles = getTilesConfig(xups, valuesObj);
-        const count = valuesObj?.alert_count ?? null;
-        const armed = Object.values(valuesObj ?? {}).includes("alert");
+          const tiles = getTilesConfig(xups, valuesObj);
+          const count = valuesObj?.alert_count ?? null;
+          const armed = Object.values(valuesObj ?? {}).includes("alert");
 
-        const cache: MonitoringCache = {
-          tilesConfig: tiles,
-          alertCount: count,
-          isArmed: armed,
-        };
+          const cache: MonitoringCache = {
+            tilesConfig: tiles,
+            alertCount: count,
+            isArmed: armed,
+          };
 
-        await saveData<MonitoringCache>(key, cache);
-        previousDeviceRef.current = selectedDevice;
-        return cache;
-      }
+          await saveData<MonitoringCache>(key, cache);
+          previousDeviceRef.current = selectedDevice;
+          return cache;
+        }
 
-      return { tilesConfig: [], alertCount: null, isArmed: false };
-    },
-    enabled: !!selectedDevice?.value,
-    staleTime: 1000 * 60 * 2,
-    gcTime: 1000 * 60 * 5,
-    networkMode: "always",
-  });
+        return { tilesConfig: [], alertCount: null, isArmed: false };
+      },
+      enabled: !!selectedDevice?.value,
+      // staleTime: 1000 * 60 * 2,
+      gcTime: 1000 * 60 * 5,
+      networkMode: "always",
+    });
 
   // ── 4. Tides ───────────────────────────────────────────
   const {
@@ -224,7 +259,9 @@ export const useDashboard = () => {
 
       if (!isConnectedRef.current) {
         const cached = await loadData<TidesCache>(key, null as any);
-        return cached ?? { first: "", second: "", third: "", fourth: "", next: "" };
+        return (
+          cached ?? { first: "", second: "", third: "", fourth: "", next: "" }
+        );
       }
 
       const today = new Date();
@@ -305,8 +342,8 @@ export const useDashboard = () => {
     loadingWeather,
     loadingMonitoring,
     loadingTides,
-    isRefreshing, 
-    onRefresh,      
+    isRefreshing,
+    onRefresh,
     selectedDevice,
     deviceOptions,
     handleDeviceChange,

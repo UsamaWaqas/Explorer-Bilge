@@ -2,7 +2,7 @@
 
 import { View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { SettingsHeader } from "../../components/settings/SettingsHeader"
+import { SettingsHeader } from "../../components/settings/SettingsHeader";
 import { TileList } from "../../components/settings/TileList";
 import { useSettings } from "../../hooks/useSettings";
 

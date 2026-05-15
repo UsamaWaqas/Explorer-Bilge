@@ -38,7 +38,7 @@ export default function AddDeviceCheckout() {
 
    
     router.replace({
-      pathname: "/(tabs)/device-events/add-device/success" as any,
+      pathname: "/(tabs)/add-device/success" as any,
     });
   };
 

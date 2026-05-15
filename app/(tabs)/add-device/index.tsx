@@ -2,78 +2,47 @@ import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import React, { useState } from "react";
 import {
-  ActivityIndicator,
-  Image,
-  KeyboardAvoidingView,
-  Platform,
-  Pressable,
-  ScrollView,
-  Text,
-  TouchableOpacity,
-  View
+    ActivityIndicator,
+    Image,
+    KeyboardAvoidingView,
+    Platform,
+    Pressable,
+    ScrollView,
+    Text,
+    TouchableOpacity,
+    View
 } from "react-native";
 import Toast from "react-native-toast-message";
-import { post } from "../../api/apiHelper";
-import GlobalInput from "../../components/Input";
-import { useAuthStore } from "../../store/authStore";
-import ArmITLogo from "../../assets/images/armIT_logo.svg";
-
-type DeviceForm = {
-  activationCode: string;
-  deviceName: string;
-  deviceLocation: string;
-  image: string;
-  verified: boolean;
-  productName: string;
-  lastVerifiedCode: string;
-};
-
-type DeviceErrors = {
-  activationCode?: string;
-  deviceName?: string;
-  deviceLocation?: string;
-  image?: string;
-};
-
-const emptyDevice = (): DeviceForm => ({
-  activationCode: "",
-  deviceName: "",
-  deviceLocation: "",
-  image: "",
-  verified: false,
-  productName: "",
-  lastVerifiedCode: "",
-});
+import { post } from "../../../api/apiHelper";
+import ArmITLogo from "../../../assets/images/armIT_logo.svg";
+import GlobalInput from "../../../components/Input";
+import { useAuthStore } from "../../../store/authStore";
+import { emptyDevice, useAddDeviceStore } from "../../../store/addDeviceStore";
 
 const AddDeviceScreen: React.FC = () => {
   const router = useRouter();
   const user = useAuthStore((state) => state.user);
 
-  const [devices, setDevices] = useState<DeviceForm[]>([emptyDevice()]);
-  const [errors, setErrors] = useState<DeviceErrors[]>([{}]);
+  const { devices, errors, setDevices, setErrors } = useAddDeviceStore();
   const [loadingIndex, setLoadingIndex] = useState<number | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const updateDevice = (index: number, patch: Partial<DeviceForm>) => {
-    setDevices((prev) =>
-      prev.map((d, i) => (i === index ? { ...d, ...patch } : d))
-    );
+  const updateDevice = (index: number, patch: Partial<typeof devices[0]>) => {
+    setDevices(devices.map((d, i) => (i === index ? { ...d, ...patch } : d)));
   };
 
-  const clearError = (index: number, field: keyof DeviceErrors) => {
-    setErrors((prev) =>
-      prev.map((e, i) => (i === index ? { ...e, [field]: undefined } : e))
-    );
+  const clearError = (index: number, field: keyof typeof errors[0]) => {
+    setErrors(errors.map((e, i) => (i === index ? { ...e, [field]: undefined } : e)));
   };
 
   const addDevice = () => {
-    setDevices((prev) => [...prev, emptyDevice()]);
-    setErrors((prev) => [...prev, {}]);
+    setDevices([...devices, emptyDevice()]);
+    setErrors([...errors, {}]);
   };
 
   const removeDevice = (index: number) => {
-    setDevices((prev) => prev.filter((_, i) => i !== index));
-    setErrors((prev) => prev.filter((_, i) => i !== index));
+    setDevices(devices.filter((_, i) => i !== index));
+    setErrors(errors.filter((_, i) => i !== index));
   };
 
   const handleActivationCodeBlur = async (index: number) => {
@@ -89,21 +58,20 @@ const AddDeviceScreen: React.FC = () => {
       updateDevice(index, { verified: false, image: "", productName: "" });
     }
 
-    const isDuplicate = devices.some(
-      (d, i) => i !== index && d.activationCode.trim().toLowerCase() === normalized
-    );
-    if (isDuplicate) {
-      Toast.show({ type: "error", text1: "Duplicate", text2: "This activation code is already added.", position: "top" });
-      return;
-    }
+    // const isDuplicate = devices.some(
+    //   (d, i) => i !== index && d.activationCode.trim().toLowerCase() === normalized
+    // );
+    // if (isDuplicate) {
+    //   Toast.show({ type: "error", text1: "Duplicate", text2: "This activation code is already added.", position: "top" });
+    //   return;
+    // }
 
     try {
       setLoadingIndex(index);
-      const response = await post("/api/devices/showImage", { activationCode: value }, {}, false);
+      const response = await post("/api/devices/showImage", { activationCode: value }, {}, true);
       console.log("Image fetch response:", response);
 
       if (response?.success || response?.data?.product) {
-
         const product = response?.data?.product;
         updateDevice(index, {
           image: product?.image || "",
@@ -113,7 +81,7 @@ const AddDeviceScreen: React.FC = () => {
         });
       } else {
         updateDevice(index, { image: "", productName: "", verified: false, lastVerifiedCode: normalized });
-        Toast.show({ type: "error", text1: "Invalid Code", text2: `Could not verify: ${value}`, position: "top" });
+        // Toast.show({ type: "error", text1: "Invalid Code", text2: `Could not verify: ${value}`, position: "top" });
       }
     } catch (error) {
       console.error("Image fetch error:", error);
@@ -123,8 +91,8 @@ const AddDeviceScreen: React.FC = () => {
   };
 
   const validate = (): boolean => {
-    const newErrors: DeviceErrors[] = devices.map((d) => {
-      const e: DeviceErrors = {};
+    const newErrors = devices.map((d) => {
+      const e: typeof errors[0] = {};
       if (!d.activationCode.trim()) e.activationCode = "Activation code required";
       if (!d.deviceName.trim()) e.deviceName = "Device name required";
       if (!d.deviceLocation.trim()) e.deviceLocation = "Device location required";
@@ -139,7 +107,7 @@ const AddDeviceScreen: React.FC = () => {
     if (!validate()) return;
 
     if (!user?.euid) {
-      Toast.show({ type: "error", text1: "Session expired", text2: "Please log in again", position: "top" });
+      // Toast.show({ type: "error", text1: "Session expired", text2: "Please log in again", position: "top" });
       return;
     }
 
@@ -160,13 +128,13 @@ const AddDeviceScreen: React.FC = () => {
           })),
         },
         {},
-        false
+        true
       );
 
       console.log("Activate API response:", JSON.stringify(response, null, 2));
 
       if (!response || response?.error) {
-        Toast.show({ type: "error", text1: "Error", text2: response?.message || "Failed to activate devices", position: "top" });
+        // Toast.show({ type: "error", text1: "Error", text2: response?.message || "Failed to activate devices", position: "top" });
         return;
       }
 
@@ -178,33 +146,33 @@ const AddDeviceScreen: React.FC = () => {
       const failed = results.filter((r) => !r.success);
 
       if (failed.length > 0) {
-        Toast.show({
-          type: "error",
-          text1: "Some devices failed",
-          text2: failed.map((f) => `${f.activationCode}: ${f.message}`).join("\n"),
-          position: "top",
-          visibilityTime: 6000,
-        });
+        // Toast.show({
+        //   type: "error",
+        //   text1: " device failed",
+        //   text2: failed.map((f) => `${f.activationCode}: ${f.message}`).join("\n"),
+        //   position: "top",
+        //   visibilityTime: 6000,
+        // });
         return;
       }
 
-     const deviceIds = results
-  .filter((r) => r.success && r.deviceId)
-  .map((r) => String(r.deviceId))
+      const deviceIds = results
+        .filter((r) => r.success && r.deviceId)
+        .map((r) => String(r.deviceId));
 
       console.log("deviceIds to pass:", deviceIds);
       console.log("euid to pass:", user?.euid);
 
-      Toast.show({
-        type: "success",
-        text1: "Devices Activated",
-        text2: "Proceeding to plan selection…",
-        position: "top",
-        visibilityTime: 2000,
-      });
+      // Toast.show({
+      //   type: "success",
+      //   text1: "Devices Activated",
+      //   text2: "Proceeding to plan selection…",
+      //   position: "top",
+      //   visibilityTime: 2000,
+      // });
 
       router.push({
-        pathname: "/(tabs)/device-events/add-device/step-two/[id]" as any,
+        pathname: "/(tabs)/add-device/step-two/[id]" as any,
         params: {
           id: JSON.stringify(deviceIds),
           euid: user?.euid,
@@ -212,7 +180,7 @@ const AddDeviceScreen: React.FC = () => {
       });
     } catch (error: any) {
       console.error("Activation error:", error);
-      Toast.show({ type: "error", text1: "Error", text2: "Something went wrong", position: "top" });
+      // Toast.show({ type: "error", text1: "Error", text2: "Something went wrong", position: "top" });
     } finally {
       setIsSubmitting(false);
     }
@@ -230,8 +198,7 @@ const AddDeviceScreen: React.FC = () => {
 
           {/* Logo */}
           <View className="items-center mb-6 mt-4">
-              <ArmITLogo width={240} height={100} />
-            {/* <Image source={require("../../assets/images/armIT_logo.png")} className="w-[260px] h-[90px]" resizeMode="contain" /> */}
+            <ArmITLogo width={240} height={100} />
           </View>
 
           {/* Heading */}
@@ -354,7 +321,8 @@ const AddDeviceScreen: React.FC = () => {
               <Text className="text-[#718096] text-xs mt-0.5">Verified devices will continue to plan selection.</Text>
             </View>
             <TouchableOpacity
-              className="bg-white border-2 border-[#2B6CB0] rounded-lg py-3 px-6"
+              className="bg-white border-2 border-[#2B6CB0] rounded-lg items-center justify-center"
+              style={{ width: 130, height: 48 }}
               onPress={handleSubmit}
               disabled={isSubmitting || loadingIndex !== null}
               activeOpacity={0.85}

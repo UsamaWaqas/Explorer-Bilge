@@ -2,7 +2,7 @@ import { create } from "zustand";
 
 interface DrawerStore {
   isOpen: boolean;
-  open: () => void;   
+  open: () => void;
   close: () => void;
 }
 

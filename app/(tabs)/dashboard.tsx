@@ -1,7 +1,7 @@
 // src/screens/Dashboard.tsx
 
 import { Ionicons } from "@expo/vector-icons";
-import { RefreshControl, ScrollView, Text, View } from "react-native"; // ✅ RefreshControl add
+import { RefreshControl, ScrollView, Text, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import CustomDropdown from "../../components/Select";
@@ -11,7 +11,12 @@ import { MonitoringSection } from "../../components/dashboard/MonitoringSection"
 import { WeatherSection } from "../../components/dashboard/WeatherSection";
 import { useDashboard } from "../../hooks/useDashboard";
 
+
+
+
+
 export default function Dashboard() {
+  
   const insets = useSafeAreaInsets();
 
   const {
@@ -32,6 +37,7 @@ export default function Dashboard() {
     tides,
   } = useDashboard();
 
+  console.log("[Dashboard render] label:", selectedDevice?.label);
   const isMarina = selectedDevice?.raw?.where_from === "marina";
 
   return (
@@ -65,8 +71,8 @@ export default function Dashboard() {
               </Text>
               {selectedDevice && (
                 <View className="flex-row items-center gap-1 mt-0.5">
-                  <Ionicons name="location-sharp" size={13} color="#16a34a" />
-                  <Text className="text-gray-600 text-xs font-medium">
+                  <Ionicons name="location-sharp"  size={13} color="#16a34a" />
+                  <Text className="text-gray-600  text-xs font-medium">
                     {selectedDevice.label}
                     {selectedDevice.raw?.device_location
                       ? `, ${selectedDevice.raw.device_location}`

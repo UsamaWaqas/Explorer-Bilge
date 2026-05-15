@@ -219,7 +219,6 @@ const UserDevices: React.FC = () => {
               inputClassName="text-[13px]"
             />
 
-            {/* Table / Card toggle */}
           
           </View>
         </View>

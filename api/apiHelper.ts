@@ -49,7 +49,6 @@ async function post(
   try {
     const response = await axiosInstance.post(url, data, config);
 
- 
     if (response?.data?.success === false) {
       if (showToast) {
         const message = response?.data?.message || "Something went wrong";
@@ -87,7 +86,6 @@ async function put(
 ) {
   try {
     const response = await axiosInstance.put(url, data, config);
-
 
     if (response?.data?.success === false) {
       if (showToast) {
