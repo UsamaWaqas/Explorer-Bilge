@@ -66,7 +66,6 @@ export const useDashboard = () => {
     }
   }, [isConnected]);
 
-  // ── Focus Refetch ──────────────────────────────────────
   useFocusEffect(
     useCallback(() => {
       console.log(
@@ -88,7 +87,6 @@ export const useDashboard = () => {
     }, []),
   );
 
-  // ── onRefresh ──────────────────────────────────────────
   const onRefresh = useCallback(async () => {
     if (!isConnectedRef.current) {
       Toast.show({
@@ -119,14 +117,17 @@ export const useDashboard = () => {
   >({
     queryKey: ["devices"],
     queryFn: async () => {
-       console.log("[Devices] queryFn called!"); 
+      console.log("[Devices] queryFn called!");
       if (!isConnectedRef.current) {
         const cached = await loadData<DeviceOption[]>(STORAGE_KEYS.DEVICES, []);
         return cached;
       }
 
       const result = await getDevicesList();
-        console.log("[Devices] API response:", JSON.stringify(result.data.map((d: Device) => d.device_name)));
+      console.log(
+        "[Devices] API response:",
+        JSON.stringify(result.data.map((d: Device) => d.device_name)),
+      );
 
       console.log(
         "[Devices] raw device object:",
@@ -145,27 +146,26 @@ export const useDashboard = () => {
 
       return [];
     },
-    // staleTime: 1000 * 60 * 5,
     gcTime: 1000 * 60 * 10,
     networkMode: "always",
   });
 
+  useEffect(() => {
+    if (deviceOptions.length === 0) return;
 
-useEffect(() => {
-  if (deviceOptions.length === 0) return;
-
-  if (!selectedDevice) {
-    setSelectedDevice(deviceOptions[0]);
-    previousDeviceRef.current = deviceOptions[0];
-  } else {
-    const refreshed = deviceOptions.find(d => d.value === selectedDevice.value);
-    if (refreshed) {
-      setSelectedDevice(refreshed);
-      previousDeviceRef.current = refreshed;
+    if (!selectedDevice) {
+      setSelectedDevice(deviceOptions[0]);
+      previousDeviceRef.current = deviceOptions[0];
+    } else {
+      const refreshed = deviceOptions.find(
+        (d) => d.value === selectedDevice.value,
+      );
+      if (refreshed) {
+        setSelectedDevice(refreshed);
+        previousDeviceRef.current = refreshed;
+      }
     }
-  }
-}, [deviceOptions]);
-
+  }, [deviceOptions]);
 
   useEffect(() => {
     if (selectedDevice?.raw) {
@@ -173,12 +173,17 @@ useEffect(() => {
     }
   }, [selectedDevice?.value]);
 
-  // ── 2. Stations ────────────────────────────────────────
-  const isMarinaDevice =
-    selectedDevice?.raw?.where_from === "marina" &&
+  // ── 2. Marina flags ────────────────────────────────────
+  // isMarina: just checks where_from — used for showing Tides tile vs Sunrise/Sunset
+  // isMarinaWithLocation: also checks lat/lng — used for weather/stations/tides API calls
+  const isMarina = selectedDevice?.raw?.where_from === "marina";
+
+  const isMarinaWithLocation =
+    isMarina &&
     selectedDevice?.raw?.latitude != null &&
     selectedDevice?.raw?.longitude != null;
 
+  // ── 3. Stations ────────────────────────────────────────
   const { data: stations = [] } = useQuery<any[]>({
     queryKey: ["stations"],
     queryFn: async () => {
@@ -187,13 +192,12 @@ useEffect(() => {
       );
       return res.data?.stations ?? [];
     },
-    enabled: !!selectedDevice?.value && isMarinaDevice && isConnected === true,
-    // staleTime: 1000 * 60 * 60,
+    enabled: !!selectedDevice?.value && isMarinaWithLocation && isConnected === true,
     gcTime: 1000 * 60 * 60 * 2,
     networkMode: "always",
   });
 
-  // ── 3. Monitoring ──────────────────────────────────────
+  // ── 4. Monitoring ──────────────────────────────────────
   const { data: monitoringData, isLoading: loadingMonitoring } =
     useQuery<MonitoringCache>({
       queryKey: ["monitoring", selectedDevice?.value],
@@ -224,7 +228,7 @@ useEffect(() => {
             ? result.data.deviceValues[0]
             : result.data.deviceValues;
 
-          const tiles = getTilesConfig(xups, valuesObj);
+          const tiles = getTilesConfig(xups, valuesObj, device.where_from);
           const count = valuesObj?.alert_count ?? null;
           const armed = Object.values(valuesObj ?? {}).includes("alert");
 
@@ -242,12 +246,11 @@ useEffect(() => {
         return { tilesConfig: [], alertCount: null, isArmed: false };
       },
       enabled: !!selectedDevice?.value,
-      // staleTime: 1000 * 60 * 2,
       gcTime: 1000 * 60 * 5,
       networkMode: "always",
     });
 
-  // ── 4. Tides ───────────────────────────────────────────
+  // ── 5. Tides ───────────────────────────────────────────
   const {
     data: tides = { first: "", second: "", third: "", fourth: "", next: "" },
     isLoading: loadingTides,
@@ -277,6 +280,12 @@ useEffect(() => {
         if (!best || dist < best.dist) return { station, dist };
         return best;
       }, null);
+
+      console.log("[Tides] enabled check:", {
+  device: !!selectedDevice?.value,
+  isMarinaWithLocation,
+  stations: stations.length,
+});
 
       const tidesRes = await axios.get(
         "https://api.tidesandcurrents.noaa.gov/api/prod/datagetter",
@@ -314,14 +323,14 @@ useEffect(() => {
       await saveData(key, result);
       return result;
     },
-    enabled: !!selectedDevice?.value && isMarinaDevice && stations.length > 0,
-    staleTime: 1000 * 60 * 30,
-    gcTime: 1000 * 60 * 60,
+    enabled: !!selectedDevice?.value && isMarinaWithLocation && stations.length > 0,
+    // staleTime: 1000 * 60 * 30,
+    // gcTime: 1000 * 60 * 60,
     networkMode: "always",
     retry: false,
   });
 
-  // ── 5. Handle Device Change ────────────────────────────
+  // ── 6. Handle Device Change ────────────────────────────
   const handleDeviceChange = (val: string | number) => {
     if (!isConnectedRef.current) {
       Toast.show({
@@ -354,5 +363,7 @@ useEffect(() => {
     formatTime,
     tides,
     isConnected,
+    isMarina,                // ← added
+    isMarinaWithLocation,    // ← added
   };
 };

@@ -16,8 +16,6 @@ import {
 import Toast from "react-native-toast-message";
 import { post } from "../../../../api/apiHelper";
 
-// ─── Types ────────────────────────────────────────────────────────────────────
-
 interface Device {
   activationCode: string;
   deviceName: string;
@@ -25,14 +23,12 @@ interface Device {
   image: string;
   verified: boolean;
   productName: string;
-  lastVerifiedCode: string; 
+  lastVerifiedCode: string;
 }
 
 interface DeviceActivationForm {
   devices: Device[];
 }
-
-// ─── Component ────────────────────────────────────────────────────────────────
 
 export default function StepOne() {
   const router = useRouter();
@@ -53,7 +49,7 @@ export default function StepOne() {
             image: "",
             verified: false,
             productName: "",
-            lastVerifiedCode: "", 
+            lastVerifiedCode: "",
           },
         ],
       },
@@ -64,15 +60,12 @@ export default function StepOne() {
     name: "devices",
   });
 
-  // ─── Device Lookup (on blur of activation code) ──────────────────────────
-
   const deviceLookup = async (value: string, index: number) => {
     if (!value?.trim()) return;
 
     const normalizedValue = value.trim().toLowerCase();
     const currentDevice = getValues(`devices.${index}`);
 
-  
     if (currentDevice.verified && currentDevice.lastVerifiedCode === normalizedValue) {
       return;
     }
@@ -82,7 +75,6 @@ export default function StepOne() {
       setValue(`devices.${index}.image`, "");
       setValue(`devices.${index}.productName`, "");
     }
-
 
     const allDevices = getValues("devices");
     const isDuplicate = allDevices.some(
@@ -105,40 +97,32 @@ export default function StepOne() {
     try {
       const response = await post(
         "/api/devices/showImage",
-        { activationCode: value.trim() },
+        { activationCode: value.trim(), userId },
         {},
         true
       );
-         console.log("Image fetch response:", response);
+      console.log("Image fetch response:", response);
 
-  
-      // if (response?.isOffline) {
-      //   Toast.show({
-      //     type: "info",
-      //     text1: "Offline",
-      //     text2: "No internet connection",
-      //     position: "top",
-      //     visibilityTime: 3000,
-      //   });
-      //   return;
-      // }
+      const product = response?.data?.product;
 
-      // if (response?.success === false) {
-      //   Toast.show({
-      //     type: "error",
-      //     text1: "Error",
-      //     text2: `Invalid activation code: ${value}`,
-      //     position: "top",
-      //     visibilityTime: 3000,
-      //   });
-      //   return;
-      // }
-
-      setValue(`devices.${index}.image`, response?.data?.product?.image ?? "");
-      setValue(`devices.${index}.productName`, response?.data?.product?.product_name ?? "");
-      setValue(`devices.${index}.verified`, true);
-      
-      setValue(`devices.${index}.lastVerifiedCode`, normalizedValue);
+      if (product?.image) {
+        setValue(`devices.${index}.image`, product.image);
+        setValue(`devices.${index}.productName`, product.product_name ?? "");
+        setValue(`devices.${index}.verified`, true);
+        setValue(`devices.${index}.lastVerifiedCode`, normalizedValue);
+      } else {
+        setValue(`devices.${index}.image`, "");
+        setValue(`devices.${index}.productName`, "");
+        setValue(`devices.${index}.verified`, false);
+        setValue(`devices.${index}.lastVerifiedCode`, "");
+        Toast.show({
+          type: "error",
+          text1: "Invalid Code",
+          text2: "No device found for this activation code.",
+          position: "top",
+          visibilityTime: 3000,
+        });
+      }
     } catch (error) {
       Toast.show({
         type: "error",
@@ -151,8 +135,6 @@ export default function StepOne() {
       setLoadingIndex(null);
     }
   };
-
-  // ─── Submit ───────────────────────────────────────────────────────────────
 
   const onSubmit = async (data: DeviceActivationForm) => {
     const allValid = data.devices.every((d) => d.image && d.image !== "");
@@ -176,7 +158,6 @@ export default function StepOne() {
         false
       );
 
-    
       if (response?.isOffline) {
         Toast.show({ type: "info", text1: "Offline", text2: "No internet connection", position: "top", visibilityTime: 3000 });
         return;
@@ -210,8 +191,6 @@ export default function StepOne() {
     }
   };
 
-  // ─── Render ───────────────────────────────────────────────────────────────
-
   return (
     <ScrollView
       className="flex-1 bg-white"
@@ -219,14 +198,11 @@ export default function StepOne() {
       keyboardShouldPersistTaps="handled"
       showsVerticalScrollIndicator={false}
     >
-      {/* Logo */}
       <View className="items-center pt-4 pb-2 px-6">
-       <ArmITLogo width={240} height={100} />
+        <ArmITLogo width={240} height={100} />
       </View>
 
-      {/* Head Card */}
       <View className="mx-4 mb-4 bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
-        {/* Progress Bar */}
         <View className="h-1.5 bg-gray-200">
           <View className="h-1.5 bg-[#2B6CB0]" style={{ width: "33.3%" }} />
         </View>
@@ -247,7 +223,6 @@ export default function StepOne() {
             </Text>
           </View>
 
-          {/* Bundle summary */}
           <View className="bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 min-w-[80px] items-center">
             <Text className="text-[10px] text-[#9CA3AF] font-medium mb-0.5">Bundle Summary</Text>
             <Text className="text-sm font-bold text-[#374151]">{fields.length} Device(s)</Text>
@@ -255,16 +230,14 @@ export default function StepOne() {
         </View>
       </View>
 
-      {/* Device Cards */}
       <View className="px-4 gap-4">
         {fields.map((field, index) => {
           const device = getValues(`devices.${index}`);
           return (
             <View
               key={field.id}
-              className="bg-white  rounded-xl border border-slate-200 shadow-sm overflow-hidden"
+              className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden"
             >
-              {/* Card Header */}
               <View className="px-4 py-3 border-b border-slate-100 flex-row items-center justify-between">
                 <View>
                   <Text className="font-bold text-[#6B7280] text-base">
@@ -293,9 +266,7 @@ export default function StepOne() {
                 </View>
               </View>
 
-              {/* Card Body */}
               <View className="p-4 gap-3">
-                {/* Activation Code */}
                 <View>
                   <Text className="text-xs font-medium text-[#6B7280] mb-1.5">Activation Code</Text>
                   <Controller
@@ -323,7 +294,6 @@ export default function StepOne() {
                   />
                 </View>
 
-                {/* Device Name */}
                 <View>
                   <Text className="text-xs font-medium text-[#6B7280] mb-1.5">Device Name</Text>
                   <Controller
@@ -345,7 +315,6 @@ export default function StepOne() {
                   />
                 </View>
 
-                {/* Device Location */}
                 <View>
                   <Text className="text-xs font-medium text-[#6B7280] mb-1.5">Device Location</Text>
                   <Controller
@@ -367,7 +336,6 @@ export default function StepOne() {
                   />
                 </View>
 
-                {/* Device Preview */}
                 <View className="mt-1 rounded-xl border border-slate-200 bg-slate-50 p-3">
                   <Text className="text-xs font-semibold text-[#6B7280] mb-2">Device Preview</Text>
 
@@ -407,7 +375,6 @@ export default function StepOne() {
         })}
       </View>
 
-      {/* Add Another Device */}
       <View className="px-4 mt-4">
         <Pressable
           onPress={() =>
@@ -428,7 +395,6 @@ export default function StepOne() {
         </Pressable>
       </View>
 
-      {/* Footer */}
       <View className="mx-4 mt-6 bg-white rounded-2xl border border-slate-200 shadow-sm p-4 flex-row items-center justify-between">
         <View className="flex-1 pr-4">
           <Text className="font-semibold text-[#6B7280] text-sm">Ready for next step?</Text>
@@ -448,7 +414,6 @@ export default function StepOne() {
         </Pressable>
       </View>
 
-      {/* Slogan */}
       <View className="items-center mt-8 mb-4">
         <Text className="text-[#2B6CB0] text-[18px] font-bold tracking-wide">
           THE SMART WAY TO MONITOR

@@ -54,7 +54,7 @@ export const useEventColumns = ({ rows, getIsAlert, getAlertTimes }: Props): Col
       },
       {
         key: "external_input" as keyof PacketRow,
-        label: "Event Data Type",
+        label: "Event Type",
         width: 120,
         render: (row: PacketRow) => {
           const isAlert = getIsAlert(row);
@@ -75,6 +75,7 @@ export const useEventColumns = ({ rows, getIsAlert, getAlertTimes }: Props): Col
         width: 180,
         render: (row: PacketRow) => {
           const isAlert = getIsAlert(row);
+          console.log("usam;: ",row,getEventDescription(row))
           return (
             <Text
               className={`text-[11px] font-medium ${isAlert ? "text-red-500" : "text-green-500"}`}

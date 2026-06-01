@@ -26,7 +26,7 @@ export const useAlarmStore = create<AlarmState>((set, get) => ({
       passedProduct ??
       products.find((p) => p.id == packet?.product_id) ??
       null;
-
+    console.log("lkjewril: ",passedProduct)
     if (!product) return false;
 
     const alarms = product.attributes?.filter((item) => item.checkin == 0);

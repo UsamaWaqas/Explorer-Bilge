@@ -1,4 +1,3 @@
-// src/components/dashboard/MonitoringSection.tsx
 
 import { FontAwesome5 } from "@expo/vector-icons";
 import { Text, View, ViewStyle } from "react-native";
@@ -73,7 +72,7 @@ export const MonitoringSection = ({
               style={
                 tile.textColor &&
                 typeof tile.textColor === "object" &&
-                !("props" in tile.textColor)   // reject React elements
+                !("props" in tile.textColor)   
                   ? tile.textColor
                   : undefined
               }

@@ -60,8 +60,8 @@ export function useUserDevices() {
     {},
     {
       enabled: !!user?.id,
-      staleTime: 1000 * 60 * 10,
-      gcTime: 1000 * 60 * 30,
+      // staleTime: 1000 * 60 * 10,
+      // gcTime: 1000 * 60 * 30,
     },
   );
 
@@ -74,7 +74,7 @@ export function useUserDevices() {
   const {
     data: devicesResponse,
     isFetching,
-    isLoading, 
+    isLoading,
     refetch: fetchDevices,
   } = useSimpleQuery<DevicesApiResponse>(
     "user-devices",
@@ -86,8 +86,8 @@ export function useUserDevices() {
     },
     {
       enabled: !!user?.id,
-      staleTime: 1000 * 30,
-      gcTime: 1000 * 60 * 10,
+      // staleTime: 1000 * 30,
+      // gcTime: 1000 * 60 * 10,
     },
   );
 
@@ -178,7 +178,7 @@ export function useUserDevices() {
     rows,
     totalRows,
     isFetching,
-    isLoading, 
+    isLoading,
     isConnected,
     searchText,
     settingsRow,

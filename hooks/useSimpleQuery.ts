@@ -39,7 +39,7 @@ export const useSimpleQuery = <TData = unknown>(
     },
 
     staleTime: 0,          
-    gcTime: 1000 * 60 * 5,
+    // gcTime: 1000 * 60 * 5,
     refetchOnMount: true,  
     refetchOnWindowFocus: true,
 

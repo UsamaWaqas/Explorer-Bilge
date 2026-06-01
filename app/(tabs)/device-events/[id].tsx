@@ -153,7 +153,6 @@ export default function DeviceEvents() {
   const [viewMode, setViewMode] = useState<ViewMode>("table");
   const [accumulatedRows, setAccumulatedRows] = useState<PacketRow[]>([]);
   const isFirstLoad = useRef(true);
-
   const {
     rows,
     totalRows,
@@ -167,6 +166,7 @@ export default function DeviceEvents() {
     getIsAlert,
     getAlertTimes,
   } = usePackets({ device_id: id });
+  // console.log("pwlie: ",getIsAlert())
 
   useFocusEffect(
     useCallback(() => {

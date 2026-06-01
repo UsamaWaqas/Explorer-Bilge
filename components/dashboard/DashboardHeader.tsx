@@ -1,17 +1,20 @@
-// src/components/dashboard/DashboardHeader.tsx
-
-import { Ionicons } from "@expo/vector-icons";
+import { Ionicons, MaterialIcons } from "@expo/vector-icons";
 import { Text, View } from "react-native";
 
 interface Props {
   deviceLabel: string;
   isArmed: boolean;
+  whereFrom?: string;
 }
 
-export const DashboardHeader = ({ deviceLabel, isArmed }: Props) => (
+export const DashboardHeader = ({ deviceLabel, isArmed, whereFrom }: Props) => (
   <View className="flex-row border-t border-white items-center bg-[#2C64B3] justify-between px-4 py-3">
     <View className="flex-row items-center flex-1 mr-3">
-      <Ionicons name="boat" size={32} color="#fff" />
+      {whereFrom === "marina" ? (
+        <Ionicons name="boat" size={32} color="#fff" />
+      ) : (
+        <MaterialIcons name="apartment" size={32} color="#fff" />
+      )}
       <Text
         numberOfLines={1}
         ellipsizeMode="tail"
