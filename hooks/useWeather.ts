@@ -18,10 +18,10 @@ interface WeatherCache {
 const CACHE_DURATION = 10 * 60 * 1000; // 10 minutes
 
 export const useWeather = () => {
-  const [weatherData, setWeatherData]       = useState<any>(null);
+  const [weatherData, setWeatherData] = useState<any>(null);
   const [loadingWeather, setLoadingWeather] = useState(true);
-  const [weatherCache, setWeatherCache]     = useState<WeatherCache>({});
-  const weatherLoaded                       = useRef(false);
+  const [weatherCache, setWeatherCache] = useState<WeatherCache>({});
+  const weatherLoaded = useRef(false);
 
   const getCacheKey = (device: Device) =>
     `${device.latitude}_${device.longitude}`;
@@ -47,8 +47,7 @@ export const useWeather = () => {
       return;
     }
 
-    // ── FIX 2: null coordinate guard ─────────────────────────────────────
-    // Device exists but has no GPS coordinates — skip weather fetch.
+   
     if (!device.latitude || !device.longitude) {
       setWeatherData(null);
       setLoadingWeather(false);
@@ -65,7 +64,7 @@ export const useWeather = () => {
       return;
     }
 
-    // Cache miss → show loading, then fetch from API
+  
     setLoadingWeather(true);
 
     const result = await getWeatherData(device.latitude, device.longitude);
@@ -82,16 +81,16 @@ export const useWeather = () => {
   };
 
   const formatTime = (unix: number) =>
-    new Date(unix * 1000).toLocaleTimeString([], {
-      hour: "2-digit",
-      minute: "2-digit",
-    });
+  new Date(unix * 1000).toLocaleTimeString([], {
+    hour: "2-digit",
+    minute: "2-digit",
+    timeZone: "UTC", 
+  })
 
   return {
     weatherData,
     loadingWeather,
     fetchWeather,
-    // checkShouldShowLoading removed — fetchWeather manages its own loading state
     formatTime,
   };
 };

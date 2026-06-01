@@ -2,7 +2,6 @@ import { useEffect, useRef } from "react";
 import { Animated, Dimensions, Easing, Pressable, View } from "react-native";
 import { useDrawerStore } from "../store/ModalStore";
 
-const { width } = Dimensions.get("window");
 const DRAWER_WIDTH = 320;
 
 interface GlobalDrawerProps {
@@ -63,7 +62,7 @@ export default function GlobalDrawer({ children }: GlobalDrawerProps) {
           top: 0, left: 0, right: 0, bottom: 0,
           backgroundColor: "rgba(0,0,0,0.5)",
           opacity: fadeAnim,
-          zIndex: 998,  
+          zIndex: 998,
         }}
       >
         <Pressable style={{ flex: 1 }} onPress={close} />
@@ -73,21 +72,26 @@ export default function GlobalDrawer({ children }: GlobalDrawerProps) {
       <Animated.View
         style={{
           position: "absolute",
-          top: 0, right: 0, bottom: 0,
+          top: 0,
+          right: 0,
+          bottom: 0,
           width: DRAWER_WIDTH,
           backgroundColor: "#E8EEF3",
-          zIndex: 998, 
+          zIndex: 999,
           transform: [{ translateX }],
           shadowColor: "#000",
           shadowOffset: { width: -2, height: 0 },
           shadowOpacity: 0.25,
           shadowRadius: 10,
-          elevation: 998,
+          elevation: 999,
         }}
       >
-        <Pressable onPress={(e) => e.stopPropagation()}>
+        <View
+          style={{ flex: 1 }}
+          onStartShouldSetResponder={() => true}
+        >
           {children}
-        </Pressable>
+        </View>
       </Animated.View>
     </>
   );

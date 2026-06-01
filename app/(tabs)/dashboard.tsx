@@ -1,5 +1,3 @@
-// src/screens/Dashboard.tsx
-
 import { Ionicons } from "@expo/vector-icons";
 import { RefreshControl, ScrollView, Text, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -11,12 +9,7 @@ import { MonitoringSection } from "../../components/dashboard/MonitoringSection"
 import { WeatherSection } from "../../components/dashboard/WeatherSection";
 import { useDashboard } from "../../hooks/useDashboard";
 
-
-
-
-
 export default function Dashboard() {
-  
   const insets = useSafeAreaInsets();
 
   const {
@@ -24,8 +17,8 @@ export default function Dashboard() {
     loadingWeather,
     loadingMonitoring,
     loadingTides,
-    isRefreshing,     
-    onRefresh,        
+    isRefreshing,
+    onRefresh,
     selectedDevice,
     deviceOptions,
     handleDeviceChange,
@@ -35,10 +28,11 @@ export default function Dashboard() {
     weatherData,
     formatTime,
     tides,
+    isMarina,         
+    isMarinaWithLocation
   } = useDashboard();
 
   console.log("[Dashboard render] label:", selectedDevice?.label);
-  const isMarina = selectedDevice?.raw?.where_from === "marina";
 
   return (
     <View className="flex-1 bg-gray-50">
@@ -47,7 +41,9 @@ export default function Dashboard() {
       <DashboardHeader
         deviceLabel={selectedDevice?.label ?? "Loading..."}
         isArmed={isArmed}
+         whereFrom={selectedDevice?.raw?.where_from}
       />
+      
 
       {loadingDevices ? (
         <DashboardSkeleton />
@@ -55,7 +51,7 @@ export default function Dashboard() {
         <ScrollView
           className="flex-1 bg-white px-4 pt-4"
           contentContainerStyle={{ paddingBottom: 100 + insets.bottom }}
-          refreshControl={  
+          refreshControl={
             <RefreshControl
               refreshing={isRefreshing}
               onRefresh={onRefresh}
@@ -66,13 +62,13 @@ export default function Dashboard() {
           {/* CURRENT CONDITIONS */}
           <View className="flex-row items-center gap-3 mb-3">
             <View className="flex-1">
-              <Text className="text-[#2563EB] text-base font-bold tracking-wide">
+              <Text className="text-[#2C64B3] text-base font-bold tracking-wide">
                 CURRENT CONDITIONS
               </Text>
               {selectedDevice && (
                 <View className="flex-row items-center gap-1 mt-0.5">
-                  <Ionicons name="location-sharp"  size={13} color="#16a34a" />
-                  <Text className="text-gray-600  text-xs font-medium">
+                  <Ionicons name="location-sharp" size={13} color="#16a34a" />
+                  <Text className="text-gray-600 text-xs font-medium">
                     {selectedDevice.label}
                     {selectedDevice.raw?.device_location
                       ? `, ${selectedDevice.raw.device_location}`
@@ -100,8 +96,8 @@ export default function Dashboard() {
               loadingWeather={loadingWeather}
               formatTime={formatTime}
               isMarina={isMarina}
-              tides={tides}
-              loadingTides={loadingTides}
+              tides={isMarinaWithLocation ? tides : undefined}
+              loadingTides={isMarinaWithLocation ? loadingTides : false}
             />
           </View>
 

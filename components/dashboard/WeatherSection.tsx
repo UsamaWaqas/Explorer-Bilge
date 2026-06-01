@@ -1,5 +1,3 @@
-// src/components/dashboard/WeatherSection.tsx
-
 import { Ionicons } from "@expo/vector-icons";
 import { Image, Text, View } from "react-native";
 
@@ -27,7 +25,6 @@ interface Props {
   loadingTides?: boolean;
 }
 
-// Small skeleton rows for tides tile
 const TidesSkeleton = () => (
   <View className="gap-y-[6px]">
     {[1, 2, 3, 4].map((i) => (
@@ -101,12 +98,12 @@ export const WeatherSection = ({
         </View>
       </TileLayout>
 
-      {/* Tides (sirf marina) ya Sunrise/Sunset */}
+      {/* Tides (marina) or Sunrise/Sunset */}
       {isMarina ? (
         <TileLayout title="Today's Tides" style={{ width: "48.5%" }}>
           {loadingTides ? (
             <TidesSkeleton />
-          ) : (
+          ) : tides?.first ? (
             <View className="gap-y-[2px]">
               {[tides?.first, tides?.second, tides?.third, tides?.fourth].map((tide, i) => {
                 if (!tide) return null;
@@ -139,6 +136,13 @@ export const WeatherSection = ({
                 );
               })}
             </View>
+          ) : (
+            // Fallback when marina boat has no lat/lng set
+            <View className="flex-1 justify-center items-center">
+              <Text className="text-gray-400 text-xs text-center">
+                No location set for this boat
+              </Text>
+            </View>
           )}
         </TileLayout>
       ) : (
@@ -149,10 +153,10 @@ export const WeatherSection = ({
           </View>
           <View className="flex-row justify-center">
             <Text className="text-base text-gray-500 font-bold">
-              {weatherData?.sys?.sunrise ? formatTime(weatherData.sys.sunrise) : "NA"}
+              {weatherData?.sys?.sunrise ? formatTime(weatherData.sys.sunrise + (weatherData.timezone ?? 0)) : "NA"}
             </Text>
             <Text className="text-base text-gray-500 font-bold ml-8">
-              {weatherData?.sys?.sunset ? formatTime(weatherData.sys.sunset) : "NA"}
+              {weatherData?.sys?.sunset ? formatTime(weatherData.sys.sunset + (weatherData.timezone ?? 0)) : "NA"}
             </Text>
           </View>
         </TileLayout>

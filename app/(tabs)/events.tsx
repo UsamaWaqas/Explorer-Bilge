@@ -36,7 +36,7 @@ export default function Events() {
   usePusherEvent(fetchPackets);
 
   const columns = useEventColumns({ rows, getIsAlert, getAlertTimes });
-
+  console.log("Events rows-chirp:", rows);
   return (
     <View className="flex-1 bg-white py-3">
       <View className="flex-1">

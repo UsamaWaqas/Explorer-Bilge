@@ -71,7 +71,7 @@ export default function DeviceHealthSchedules() {
       const res = await get(`/api/inventoryDevices/relateduser?limit=-1`);
       return res; 
     },
-    staleTime: 1000 * 60 * 5,
+    // staleTime: 1000 * 60 * 5,
   });
 
  

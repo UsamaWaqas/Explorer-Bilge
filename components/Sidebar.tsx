@@ -9,16 +9,18 @@ import { useDrawerStore } from "../store/ModalStore";
 import { UserDetail } from "../types/ auth.types";
 import GlobalInput from "./Input";
 import AnimatedSwitch from "./Switch";
+import { useQueryClient } from "@tanstack/react-query";
+
 
 export default function Sidebar() {
   const router = useRouter();
   const close = useDrawerStore((s) => s.close);
   const isOpen = useDrawerStore((s) => s.isOpen);
 
+   const queryClient = useQueryClient();
   const user = useAuthStore((state) => state.user);
   const userDetail = useAuthStore((state) => state.userDetail);
   const setUserDetail = useAuthStore((state) => state.setUserDetail);
-
 
   const [sidebarName, setSidebarName] = useState(
     user ? `${user.first_name} ${user.last_name}`.trim() : ""
@@ -34,45 +36,47 @@ export default function Sidebar() {
   const [togglingPhone, setTogglingPhone] = useState(false);
   const [togglingEmail, setTogglingEmail] = useState(false);
 
-  const [phoneNumber, setPhoneNumber] = useState(
-    Array.isArray(userDetail?.notification_phone)
-      ? userDetail.notification_phone.join(", ")
-      : userDetail?.notification_phone ?? ""
-  );
-  const [emailAddress, setEmailAddress] = useState(
-    Array.isArray(userDetail?.notification_email)
-      ? userDetail.notification_email.join(", ")
-      : userDetail?.notification_email ?? ""
-  );
+  const [phoneNumbers, setPhoneNumbers] = useState<string[]>([]);
+  const [emailAddresses, setEmailAddresses] = useState<string[]>([]);
 
+  useEffect(() => {
+    if (!isOpen) return;
 
-useEffect(() => {
-  if (!isOpen) return;
+    async function fetchUserDetail() {
+      try {
+        const res = await get(`/api/user/details/${user?.id}`);
+        if (res?.success && res?.data) {
+          const d = res.data;
+          setSidebarName(`${d.first_name || ""} ${d.last_name || ""}`.trim());
+          setSidebarEmail(d.email || "");
+          setTextSmsEnabled(!!d.phone_notification);
+          setEmailNotifEnabled(!!d.email_notification);
 
-  async function fetchUserDetail() {
-    try {
-      const res = await get(`/api/user/details/${user?.id}`);
-      if (res?.success && res?.data) {
-        const d = res.data;
-        setSidebarName(`${d.first_name || ""} ${d.last_name || ""}`.trim());
-        setSidebarEmail(d.email || "");
-        setTextSmsEnabled(!!d.phone_notification);
-        setEmailNotifEnabled(!!d.email_notification);
-        setPhoneNumber(d.notification_phone ?? "");
-        setEmailAddress(d.notification_email ?? "");
-        setUserDetail({
-          phone_notification: !!d.phone_notification,
-          email_notification: !!d.email_notification,
-          notification_phone: d.notification_phone ?? "",
-          notification_email: d.notification_email ?? "",
-        });
+          const phones = typeof d.notification_phone === "string"
+            ? d.notification_phone.split(",").map((p: string) => p.trim()).filter(Boolean)
+            : Array.isArray(d.notification_phone) ? d.notification_phone : [];
+
+          const emails = typeof d.notification_email === "string"
+            ? d.notification_email.split(",").map((e: string) => e.trim()).filter(Boolean)
+            : Array.isArray(d.notification_email) ? d.notification_email : [];
+
+          setPhoneNumbers(phones);
+          setEmailAddresses(emails);
+
+          setUserDetail({
+            phone_notification: !!d.phone_notification,
+            email_notification: !!d.email_notification,
+            notification_phone: d.notification_phone ?? "",
+            notification_email: d.notification_email ?? "",
+          });
+        }
+      } catch (error) {
+        console.error("Error fetching user detail:", error);
       }
-    } catch (error) {
-      console.error("Error fetching user detail:", error);
     }
-  }
-  fetchUserDetail();
-}, [isOpen]); 
+    fetchUserDetail();
+  }, [isOpen]);
+
   const getInitials = (name: string) => {
     if (!name) return "MN";
     return name
@@ -123,7 +127,9 @@ useEffect(() => {
   }
 
   const handleLogout = async () => {
+
     close();
+     queryClient.clear();   
     await logoutService();
     router.replace("/(auth)/Login");
   };
@@ -144,8 +150,13 @@ useEffect(() => {
   };
 
   return (
-    <ScrollView className="p-4" showsVerticalScrollIndicator={false}>
-      <Text className="text-[#2C64B3] text-lg font-bold mb-4">PROFILE</Text>
+    <ScrollView
+      style={{ flex: 1 }}
+      className="p-4"
+      showsVerticalScrollIndicator={false}
+      contentContainerStyle={{ paddingBottom: 40 }}
+    >
+      <Text className="text-[#2C64B3] text-lg  font-bold mb-2">PROFILE</Text>
 
       <View className="flex flex-col gap-y-3">
 
@@ -207,14 +218,32 @@ useEffect(() => {
               />
             </View>
           </View>
-          <GlobalInput
-            placeholder="Phone number"
-            value={phoneNumber}
-            onChangeText={setPhoneNumber}
-            inputClassName="h-12"
-            keyboardType="phone-pad"
-            leftIcon={<Ionicons name="call-outline" size={18} color="gray" />}
-          />
+
+          {phoneNumbers.length > 0 ? (
+            <View className="gap-y-2">
+              {phoneNumbers.map((phone, i) => (
+                <GlobalInput
+                  key={i}
+                  placeholder="Phone number"
+                  value={phone}
+                  editable={false}
+                  inputClassName="h-12 text-[#6B7280]"
+                  keyboardType="phone-pad"
+                  leftIcon={<Ionicons name="call-outline" size={18} color="gray" />}
+                />
+              ))}
+            </View>
+          ) : (
+            <GlobalInput
+              placeholder="Phone number"
+              value=""
+              editable={false}
+              inputClassName="h-12 text-[#6B7280]"
+              keyboardType="phone-pad"
+              leftIcon={<Ionicons name="call-outline" size={18} color="gray" />}
+            />
+          )}
+
           <Text className="text-[#6B7280] text-xs mt-1 mb-4">
             Multiple phones entered separated by [,] comma
           </Text>
@@ -232,15 +261,34 @@ useEffect(() => {
               />
             </View>
           </View>
-          <GlobalInput
-            placeholder="Email address"
-            value={emailAddress}
-            onChangeText={setEmailAddress}
-            inputClassName="h-12"
-            keyboardType="email-address"
-            autoCapitalize="none"
-            leftIcon={<Ionicons name="mail-outline" size={18} color="gray" />}
-          />
+
+          {emailAddresses.length > 0 ? (
+            <View className="gap-y-2">
+              {emailAddresses.map((email, i) => (
+                <GlobalInput
+                  key={i}
+                  placeholder="Email address"
+                  value={email}
+                  editable={false}
+                  inputClassName="h-12 text-[#6B7280]"
+                  keyboardType="email-address"
+                  autoCapitalize="none"
+                  leftIcon={<Ionicons name="mail-outline" size={18} color="gray" />}
+                />
+              ))}
+            </View>
+          ) : (
+            <GlobalInput
+              placeholder="Email address"
+              value=""
+              editable={false}
+              inputClassName="h-12 text-[#6B7280]"
+              keyboardType="email-address"
+              autoCapitalize="none"
+              leftIcon={<Ionicons name="mail-outline" size={18} color="gray" />}
+            />
+          )}
+
           <Text className="text-[#6B7280] text-xs mt-1">
             Multiple email entered separated by [,] comma
           </Text>
@@ -251,6 +299,7 @@ useEffect(() => {
           <Ionicons name="headset" size={32} color="#C9D0D3" />
           <Text className="text-[#C9D0D3] text-xl font-bold ml-3">SUPPORT</Text>
         </Pressable>
+        
 
         {/* Add Device */}
         <Pressable
