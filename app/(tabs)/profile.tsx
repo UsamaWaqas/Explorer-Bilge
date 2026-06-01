@@ -1,15 +1,18 @@
 import { useEffect, useState } from "react";
 import {
   ActivityIndicator,
+  Alert,
   Pressable,
   ScrollView,
+  Share,
   Text,
   TextInput,
   View,
 } from "react-native";
+import { useRouter } from "expo-router";
 import { get, post, put } from "../../api/apiHelper";
-import AnimatedSwitch from "../../components/Switch";
 import { useAuthStore } from "../../store/authStore";
+import { buildPrivateRoom } from "../../utils/roomBuilder";
 
 function Field({
   label,
@@ -20,7 +23,7 @@ function Field({
   autoCapitalize = "sentences",
   secureTextEntry = false,
 }: {
-  label: string;
+  label?: string;
   value: string;
   onChangeText: (v: string) => void;
   placeholder?: string;
@@ -30,9 +33,11 @@ function Field({
 }) {
   return (
     <View style={{ marginBottom: 16 }}>
-      <Text style={{ fontSize: 14, color: "#6B7280", marginBottom: 6 }}>
-        {label}
-      </Text>
+      {label ? (
+        <Text style={{ fontSize: 14, color: "#6B7280", marginBottom: 6 }}>
+          {label}
+        </Text>
+      ) : null}
       <TextInput
         value={value}
         onChangeText={onChangeText}
@@ -54,64 +59,10 @@ function Field({
   );
 }
 
-function ToggleField({
-  label,
-  sublabel,
-  value,
-  onToggle,
-  loading,
-  fetchLoading,
-}: {
-  label: string;
-  sublabel: string;
-  value: boolean;
-  onToggle: (v: boolean) => void;
-  loading: boolean;
-  fetchLoading: boolean;
-}) {
-  const isDisabled = loading || fetchLoading;
-
-  return (
-    <View style={{ marginBottom: 16 }}>
-      <Text style={{ fontSize: 14, color: "#6B7280", marginBottom: 6 }}>
-        {label}
-      </Text>
-      <View
-        style={{
-          backgroundColor: "#E8EEF8",
-          borderRadius: 8,
-          paddingHorizontal: 14,
-          paddingVertical: 10,
-          flexDirection: "row",
-          alignItems: "center",
-          justifyContent: "space-between",
-        }}
-      >
-        <Text style={{ fontSize: 15, color: "#111827" }}>{sublabel}</Text>
-        <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
-          {(loading || fetchLoading) && (
-            <ActivityIndicator size="small" color="#2C64B3" />
-          )}
-          <View
-            style={{
-              opacity: isDisabled ? 0.5 : 1,
-              pointerEvents: isDisabled ? "none" : "auto",
-            }}
-          >
-            <AnimatedSwitch
-              value={value}
-              onValueChange={() => !isDisabled && onToggle(!value)}
-            />
-          </View>
-        </View>
-      </View>
-    </View>
-  );
-}
-
 export default function MyProfile() {
   const user = useAuthStore((state) => state.user);
   const userId = user?.id;
+  const router = useRouter();
 
   const userDetail = useAuthStore((state) => state.userDetail);
   const setUserDetail = useAuthStore((state) => state.setUserDetail);
@@ -133,21 +84,20 @@ export default function MyProfile() {
   const [country, setCountry] = useState("");
   const [state, setState] = useState("");
 
+  const [joinRoomInput, setJoinRoomInput] = useState("");
+  const myXnid = user?.Xnid ?? String(userId);
 
   async function fetchUserDetails() {
     setFetchLoading(true);
     const res = await get(`/api/user/details/${userId}`);
     if (!res?.error && res?.success) {
       const d = res.data;
-      console.log("Fetched User Detail:", d);
-
       setUserDetail({
         phone_notification: !!d?.phone_notification,
         email_notification: !!d?.email_notification,
         notification_phone: d?.notification_phone ?? "",
         notification_email: d?.notification_email ?? "",
       });
-
       setFirstName(d?.first_name || "");
       setLastName(d?.last_name || "");
       setEmail(d?.email || "");
@@ -164,16 +114,46 @@ export default function MyProfile() {
     setFetchLoading(false);
   }
 
-
   useEffect(() => {
     fetchUserDetails();
   }, []);
 
+  function getDisplayName() {
+    return firstName
+      ? `${firstName} ${lastName}`.trim()
+      : `${user?.first_name ?? ""} ${user?.last_name ?? ""}`.trim() || "User";
+  }
+
+  function startCall(roomName: string) {
+    router.push({
+      pathname: "/(tabs)/call/[roomName]",
+      params: {
+        roomName,
+        displayName: getDisplayName(),
+        xnid: myXnid,
+      },
+    });
+  }
+
+  async function handleGenerateAndShare() {
+    const roomName = buildPrivateRoom(myXnid, `${myXnid}-${Date.now()}`);
+    await Share.share({
+      message: `Join my goARMIT video call. Room: ${roomName}`,
+    });
+    startCall(roomName);
+  }
+
+  function handleJoinCall() {
+    const room = joinRoomInput.trim();
+    if (!room) {
+      Alert.alert("Enter Room Name", "Please enter the room name to join.");
+      return;
+    }
+    startCall(room);
+  }
 
   async function toggleSwitch(type: string, val: boolean) {
-    const key =
-      type === "email" ? "email_notification" : "phone_notification";
-
+    const key = type === "email" ? "email_notification" : "phone_notification";
     setUserDetail({
       phone_notification: !!(userDetail?.phone_notification),
       email_notification: !!(userDetail?.email_notification),
@@ -182,24 +162,16 @@ export default function MyProfile() {
       [key]: val,
     });
     setIsLoading(type);
-
     try {
       const res = await post("/api/toggle-notification", { type });
-
       if (!res?.error && res?.success) {
         const updated = res?.data;
         if (updated) {
           setUserDetail({
             phone_notification: !!updated.phone_notification,
             email_notification: !!updated.email_notification,
-            notification_phone:
-              updated.notification_phone ??
-              userDetail?.notification_phone ??
-              "",
-            notification_email:
-              updated.notification_email ??
-              userDetail?.notification_email ??
-              "",
+            notification_phone: updated.notification_phone ?? userDetail?.notification_phone ?? "",
+            notification_email: updated.notification_email ?? userDetail?.notification_email ?? "",
           });
         }
       } else {
@@ -224,7 +196,6 @@ export default function MyProfile() {
     }
   }
 
-
   async function handleSave() {
     setIsSubmitting(true);
     try {
@@ -242,8 +213,6 @@ export default function MyProfile() {
         city,
         zipCode: postalCode,
       });
-
-
       if (!res?.error && res?.success) {
         await fetchUserDetails();
       }
@@ -258,108 +227,128 @@ export default function MyProfile() {
         contentContainerStyle={{ padding: 20, paddingBottom: 60 }}
         showsVerticalScrollIndicator={false}
       >
-        <Text
-          style={{
-            fontSize: 18,
-            fontWeight: "700",
-            color: "#2C64B3",
-            marginBottom: 20,
-          }}
-        >
+        <Text style={{ fontSize: 18, fontWeight: "700", color: "#2C64B3", marginBottom: 20 }}>
           My Profile
         </Text>
 
-        <Field
-          label="First Name"
-          value={firstName}
-          onChangeText={setFirstName}
-          autoCapitalize="words"
-        />
-        <Field
-          label="Last Name"
-          value={lastName}
-          onChangeText={setLastName}
-          autoCapitalize="words"
-        />
-        <Field
-          label="Email"
-          value={email}
-          onChangeText={setEmail}
-          keyboardType="email-address"
-          autoCapitalize="none"
-        />
-        <Field
-          label="Phone Number"
-          value={phoneNumber}
-          onChangeText={setPhoneNumber}
-          keyboardType="phone-pad"
-        />
-        <Field
-          label="Notification Phone Number"
-          value={notificationPhone}
-          onChangeText={setNotificationPhone}
-          keyboardType="phone-pad"
-        />
-        <Field
-          label="Notification Email Address"
-          value={notificationEmail}
-          onChangeText={setNotificationEmail}
-          keyboardType="email-address"
-          autoCapitalize="none"
-        />
-        <Field
-          label="Address 1"
-          value={address1}
-          onChangeText={setAddress1}
-        />
-        <Field
-          label="Address 2"
-          value={address2}
-          onChangeText={setAddress2}
-        />
-        <Field
-          label="City"
-          value={city}
-          onChangeText={setCity}
-          autoCapitalize="words"
-        />
-        <Field
-          label="Postal Code"
-          value={postalCode}
-          onChangeText={setPostalCode}
-          keyboardType="numeric"
-        />
-        <Field
-          label="Country"
-          value={country}
-          onChangeText={setCountry}
-          autoCapitalize="words"
-        />
-        <Field
-          label="State"
-          value={state}
-          onChangeText={setState}
-          autoCapitalize="words"
-        />
+        <Field label="First Name" value={firstName} onChangeText={setFirstName} autoCapitalize="words" />
+        <Field label="Last Name" value={lastName} onChangeText={setLastName} autoCapitalize="words" />
+        <Field label="Email" value={email} onChangeText={setEmail} keyboardType="email-address" autoCapitalize="none" />
+        <Field label="Phone Number" value={phoneNumber} onChangeText={setPhoneNumber} keyboardType="phone-pad" />
 
-        {/* 
-        <ToggleField
-          label="Phone Notification Toggle"
-          sublabel="TEXT / SMS"
-          value={!!userDetail?.phone_notification}
-          onToggle={(v) => toggleSwitch("phone", v)}
-          loading={isLoading === "phone"}
-          fetchLoading={fetchLoading}
-        /> */}
-        {/* <ToggleField
-          label="Email Notification Toggle"
-          sublabel="EMAIL NOTIFI"
-          value={!!userDetail?.email_notification}
-          onToggle={(v) => toggleSwitch("email", v)}
-          loading={isLoading === "email"}
-          fetchLoading={fetchLoading}
-        /> */}
+        {/* Notification Phone — comma separated alag alag fields */}
+        {notificationPhone.split(",").filter(Boolean).length > 0 ? (
+          notificationPhone.split(",").filter(Boolean).map((phone, i) => (
+            <Field
+              key={`phone-${i}`}
+              label={i === 0 ? "Notification Phone Number" : undefined}
+              value={phone.trim()}
+              onChangeText={(val) => {
+                const phones = notificationPhone.split(",");
+                phones[i] = val;
+                setNotificationPhone(phones.join(","));
+              }}
+              keyboardType="phone-pad"
+            />
+          ))
+        ) : (
+          <Field
+            label="Notification Phone Number"
+            value={notificationPhone}
+            onChangeText={setNotificationPhone}
+            keyboardType="phone-pad"
+          />
+        )}
 
+        {/* Notification Email — comma separated alag alag fields */}
+        {notificationEmail.split(",").filter(Boolean).length > 0 ? (
+          notificationEmail.split(",").filter(Boolean).map((em, i) => (
+            <Field
+              key={`email-${i}`}
+              label={i === 0 ? "Notification Email Address" : undefined}
+              value={em.trim()}
+              onChangeText={(val) => {
+                const emails = notificationEmail.split(",");
+                emails[i] = val;
+                setNotificationEmail(emails.join(","));
+              }}
+              keyboardType="email-address"
+              autoCapitalize="none"
+            />
+          ))
+        ) : (
+          <Field
+            label="Notification Email Address"
+            value={notificationEmail}
+            onChangeText={setNotificationEmail}
+            keyboardType="email-address"
+            autoCapitalize="none"
+          />
+        )}
+
+        <Field label="Address 1" value={address1} onChangeText={setAddress1} />
+        <Field label="Address 2" value={address2} onChangeText={setAddress2} />
+        <Field label="City" value={city} onChangeText={setCity} autoCapitalize="words" />
+        <Field label="Postal Code" value={postalCode} onChangeText={setPostalCode} keyboardType="numeric" />
+        <Field label="Country" value={country} onChangeText={setCountry} autoCapitalize="words" />
+        <Field label="State" value={state} onChangeText={setState} autoCapitalize="words" />
+
+        
+         {/* <View style={{ marginTop: 8, marginBottom: 20 }}>
+          <Text style={{ fontSize: 16, fontWeight: "700", color: "#2C64B3", marginBottom: 14 }}>
+             Video Call
+          </Text>
+
+          <Pressable
+            onPress={handleGenerateAndShare}
+            style={{
+              backgroundColor: "#16A34A",
+              paddingVertical: 13,
+              borderRadius: 8,
+              alignItems: "center",
+              marginBottom: 20,
+            }}
+          >
+            <Text style={{ color: "#fff", fontSize: 15, fontWeight: "600" }}>
+              📤 Start Call & Share Room
+            </Text>
+          </Pressable>
+
+          <Text style={{ fontSize: 14, color: "#6B7280", marginBottom: 6 }}>
+            Have a room name? Join here:
+          </Text>
+          <TextInput
+            value={joinRoomInput}
+            onChangeText={setJoinRoomInput}
+            placeholder="Enter room name..."
+            placeholderTextColor="#9CA3AF"
+            autoCapitalize="none"
+            style={{
+              backgroundColor: "#E8EEF8",
+              borderRadius: 8,
+              paddingHorizontal: 14,
+              paddingVertical: 12,
+              fontSize: 15,
+              color: "#111827",
+              marginBottom: 10,
+            }}
+          />
+          <Pressable
+            onPress={handleJoinCall}
+            style={{
+              backgroundColor: "#2C64B3",
+              paddingVertical: 13,
+              borderRadius: 8,
+              alignItems: "center",
+            }}
+          >
+            <Text style={{ color: "#fff", fontSize: 15, fontWeight: "600" }}>
+              Join Call
+            </Text>
+          </Pressable>
+        </View>  */}
+
+        
         <View style={{ alignItems: "flex-end", marginTop: 8 }}>
           <Pressable
             onPress={handleSave}
@@ -376,9 +365,7 @@ export default function MyProfile() {
             {isSubmitting ? (
               <ActivityIndicator color="#fff" />
             ) : (
-              <Text
-                style={{ color: "#fff", fontSize: 15, fontWeight: "600" }}
-              >
+              <Text style={{ color: "#fff", fontSize: 15, fontWeight: "600" }}>
                 Save Changes
               </Text>
             )}

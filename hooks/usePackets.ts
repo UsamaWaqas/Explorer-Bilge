@@ -94,16 +94,16 @@ export const usePackets = ({ device_id }: UsePacketsOptions = {}) => {
       {},
       {
         enabled: !!user?.id,
-        staleTime: 1000 * 60 * 10,
-        gcTime: 1000 * 60 * 30,
+        // staleTime: 1000 * 60 * 10,
+        // gcTime: 1000 * 60 * 30,
       },
     );
+
 
   const products = useMemo(
     () => productsResponse?.data ?? [],
     [productsResponse?.data],
   );
-
 
   useEffect(() => {
     if (products.length > 0) {
@@ -111,7 +111,6 @@ export const usePackets = ({ device_id }: UsePacketsOptions = {}) => {
     }
   }, [products]);
 
- 
   const packetParams = useMemo(
     () => ({
       user_id: user?.id,
@@ -136,8 +135,8 @@ export const usePackets = ({ device_id }: UsePacketsOptions = {}) => {
     refetch: fetchPackets,
   } = useSimpleQuery<PacketsApiResponse>(cacheKey, endpoint, packetParams, {
     enabled: !!user?.id,
-    staleTime: 1000 * 30,
-    gcTime: 1000 * 60 * 10,
+    // staleTime: 1000 * 30,
+    // gcTime: 1000 * 60 * 10,
     placeholderData: keepPreviousData,
   });
 
@@ -155,16 +154,22 @@ export const usePackets = ({ device_id }: UsePacketsOptions = {}) => {
     if (!packetsResponse) return undefined;
     const xNID = (packetsResponse as any).xNID;
     const device_type_name = (packetsResponse as any).device_type_name;
+    const product_id = (packetsResponse as any).product_id;
     return {
       ...packetsResponse,
       data: packetsResponse.data?.map((row) => ({
         ...row,
         xNID: xNID ?? row.xNID,
-      
+
         device_type_name: row.device_type_name ?? device_type_name,
+        product_id:row.product_id ?? product_id
       })),
     };
   }, [packetsResponse]);
+  console.log(
+    "API rdssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssows:",endpoint,normalizedResponse
+    // JSON.stringify(normalizedResponse?.data, null, 2),
+  );
 
   // ─── Final data — API priority, fallback AsyncStorage ─────────────────────
   const rows: PacketRow[] = normalizedResponse?.data ?? offlineRows;
@@ -174,7 +179,6 @@ export const usePackets = ({ device_id }: UsePacketsOptions = {}) => {
   // ─── Combined isLoading ────────────────────────────────────────────────────
   const isLoading =
     isPacketsLoading || isProductsLoading || (isFetching && rows.length === 0);
-
 
   useEffect(() => {
     if (
@@ -195,7 +199,6 @@ export const usePackets = ({ device_id }: UsePacketsOptions = {}) => {
     }
   }, [normalizedResponse]);
 
- 
   useEffect(() => {
     const load = async () => {
       if (isConnected && normalizedResponse?.data) return;
@@ -228,7 +231,6 @@ export const usePackets = ({ device_id }: UsePacketsOptions = {}) => {
     load();
   }, [isConnected, normalizedResponse, paginationParams, device_id]);
 
-
   const handleEventTypeChange = useCallback((val: string) => {
     setEventType(val);
     setOfflineRows([]);
@@ -256,15 +258,14 @@ export const usePackets = ({ device_id }: UsePacketsOptions = {}) => {
     }));
   }, []);
 
-  
   const checkIsAlert = useCallback(
     (row: PacketRow): boolean => {
-      if (hasNotificationLog(row.notification_log)) return true;
-      if (row.external_input === true || row.external_input === 1) return true;
-      if (row.move === true || row.move === 1) return true;
-  
-      if (row.reed_state === 0 || row.reed_state === false) return true;
-      
+      // if (hasNotificationLog(row.notification_log)) return true;
+      // if (row.external_input === true || row.external_input === 1) return true;
+      // if (row.move === true || row.move === 1) return true;
+
+      // if (row.reed_state === 0 || row.reed_state === false) return true;
+
       const product = (products.find((p) => p.id == row.product_id) ??
         null) as any;
       return isAlarm(row, product);

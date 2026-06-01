@@ -1,7 +1,6 @@
 import React from 'react';
 import { TextStyle } from 'react-native';
 import { MaterialIcons } from '@expo/vector-icons';
-
 import BatteryIcon from '../assets/Icons/Battery';
 import TemperatureIcon from '../assets/Icons/Temperature';
 import HumidityIcon from '../assets/Icons/Humidity';
@@ -71,7 +70,12 @@ export const getTextColor = (value: string): TextStyle => ({
   color: value === 'Alert' ? '#EF4444' : '#5C5C5C',
 });
 
-export const getTilesConfig = (xups: Tile[] = [], deviceValues: DeviceValues = {}) => {
+// ── whereFrom parameter add kiya ──────────────────────────────────────────────
+export const getTilesConfig = (
+  xups: Tile[] = [],
+  deviceValues: DeviceValues = {},
+  whereFrom?: string,   
+) => {
   return xups.map((tile) => {
     const rawValue = deviceValues?.[tile?.xUP ?? ''];
     const formattedValue = formatValue(tile?.data_type, rawValue);
@@ -81,15 +85,25 @@ export const getTilesConfig = (xups: Tile[] = [], deviceValues: DeviceValues = {
       ? tile.data_type.charAt(0).toUpperCase() + tile.data_type.slice(1)
       : '';
 
-    const IconComponent =
-      Icons[tile?.lable ?? ''] ??
-      Icons[capitalizedLabel] ??
-      Icons.Impact;
+    const label = tile?.lable ?? capitalizedLabel;
+
+   
+    let IconComponent: React.FC<{ size?: number; color?: string }>;
+
+    if (label === 'Device Health' && whereFrom !== 'marina') {
+      IconComponent = ({ size = ICON_SIZE, color = '#2C64B3' }) => (
+        <MaterialIcons name="apartment" size={size} color={color} />
+      );
+    } else {
+      IconComponent =
+        Icons[tile?.lable ?? ''] ??
+        Icons[capitalizedLabel] ??
+        Icons.Impact;
+    }
 
     return {
-      label: tile?.lable ?? capitalizedLabel,
+      label,
       value: formattedValue,
-     
       icon: <IconComponent size={ICON_SIZE} color={isAlert ? 'white' : '#2C64B3'} />,
       textColor: getTextColor(formattedValue),
       dataType: tile?.data_type,

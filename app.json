@@ -4,12 +4,12 @@
     "slug": "myarmit",
     "version": "1.0.0",
     "orientation": "portrait",
-    "icon": "./assets/svg/FavIcon_MyARMIT.png",
+    "icon": "./assets/svg/ARMIT-Bg.png",
     "scheme": "myarmit",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
     "splash": {
-      "image": "./assets/svg/FavIcon_MyARMIT.png",
+      "image": "./assets/svg/ARMIT-Bg.png",
       "resizeMode": "contain"
     },
     "ios": {
@@ -22,7 +22,7 @@
     "android": {
       "package": "com.goarmit.app",
       "adaptiveIcon": {
-        "foregroundImage": "./assets/svg/armit_final.png",
+        "foregroundImage": "./assets/svg/ARMIT-adaptive-v2.png",
         "backgroundColor": "#ffffff"
       },
       "predictiveBackGestureEnabled": false,
@@ -66,6 +66,7 @@
       "reactCompiler": true
     },
     "extra": {
+      "screen2meServer": "https://calling.example.com",
       "router": {},
       "eas": {
         "projectId": "e0075689-cbdb-4411-b197-d6090442cfe4"

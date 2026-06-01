@@ -64,14 +64,26 @@ export function formatTempHumBat(row: PacketRow): string {
 }
 
 export function getEventDescription(row: PacketRow): string {
-  // Web DataTable.jsx ke handleEventDescription se exact same logic
   const deviceTypeName = row.device_type_name;
-
-  if (row.external_input === true || row.external_input === 1 || deviceTypeName === "BATTERY NOTIFI") {
+  console.log("bhaisaab,: ",row)
+  // external_input
+  if (row.external_input === true || row.external_input === 1 || deviceTypeName === "BATTERY NOTIFI")
     return EXTERNAL_INPUT_MESSAGES[deviceTypeName ?? ""] || "Alert Event";
-  }
+  // if (row.external_input === false || row.external_input === 0)
+  //   return "Check-in";
+
+  // move
   if (row.move === true || row.move === 1) return "Motion Detected";
+  // if (row.move === false || row.move === 0) return "Check-in";
+
+  // reed_state
   if (row.reed_state === 0 || row.reed_state === false) return "Open Alarm Detected";
+  // if (row.reed_state === 1 || row.reed_state === true) return "Check-in";
+
+  // temperature
+  // if (row.temperature !== null && row.temperature !== undefined)
+  //   return "Temperature out of range";
+
   return "Temperature out of range";
 }
 

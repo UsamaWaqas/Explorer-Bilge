@@ -74,7 +74,7 @@ const TabLayout = () => {
             }}
           />
 
-          {/* 3 — Add CENTER green button */}
+          
           <Tabs.Screen
             name="add-device"
             options={{
@@ -135,6 +135,13 @@ const TabLayout = () => {
           <Tabs.Screen name="add-device/step-three/[id]" options={{ href: null }} />
           <Tabs.Screen name="add-device/checkout" options={{ href: null }} />
           <Tabs.Screen name="add-device/success" options={{ href: null }} />
+          <Tabs.Screen
+  name="call/[roomName]"
+  options={{
+    href: null,
+    tabBarStyle: { display: "none" },
+  }}
+/>
         </Tabs>
 
         <NetInfoBanner />
