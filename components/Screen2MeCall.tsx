@@ -1,7 +1,7 @@
+import Constants from 'expo-constants';
 import React from 'react';
 import { StyleSheet, View } from 'react-native';
 import { WebView } from 'react-native-webview';
-import Constants from 'expo-constants';
 
 const SCREEN2ME_SERVER =
   Constants.expoConfig?.extra?.screen2meServer ?? 'https://screen2me.jove1.com';

@@ -1,3 +1,4 @@
+import { useRouter } from "expo-router";
 import { useEffect, useState } from "react";
 import {
   ActivityIndicator,
@@ -9,7 +10,6 @@ import {
   TextInput,
   View,
 } from "react-native";
-import { useRouter } from "expo-router";
 import { get, post, put } from "../../api/apiHelper";
 import { useAuthStore } from "../../store/authStore";
 import { buildPrivateRoom } from "../../utils/roomBuilder";
@@ -294,12 +294,12 @@ export default function MyProfile() {
         <Field label="State" value={state} onChangeText={setState} autoCapitalize="words" />
 
         
-         {/* <View style={{ marginTop: 8, marginBottom: 20 }}>
-          <Text style={{ fontSize: 16, fontWeight: "700", color: "#2C64B3", marginBottom: 14 }}>
+          <View style={{ marginTop: 8, marginBottom: 20 }}>
+          {/* <Text style={{ fontSize: 16, fontWeight: "700", color: "#2C64B3", marginBottom: 14 }}>
              Video Call
-          </Text>
+          </Text> */}
 
-          <Pressable
+          {/* <Pressable
             onPress={handleGenerateAndShare}
             style={{
               backgroundColor: "#16A34A",
@@ -312,12 +312,26 @@ export default function MyProfile() {
             <Text style={{ color: "#fff", fontSize: 15, fontWeight: "600" }}>
               📤 Start Call & Share Room
             </Text>
-          </Pressable>
+          </Pressable> */}
+          {/* <Pressable
+  onPress={() => router.push("/(tabs)/call/contacts")}
+  style={{
+    backgroundColor: "#2C64B3",
+    paddingVertical: 13,
+    borderRadius: 8,
+    alignItems: "center",
+    marginBottom: 10,
+  }}
+>
+  <Text style={{ color: "#fff", fontSize: 15, fontWeight: "600" }}>
+    📞 Call a Contact
+  </Text>
+</Pressable> */}
 
-          <Text style={{ fontSize: 14, color: "#6B7280", marginBottom: 6 }}>
+          {/* <Text style={{ fontSize: 14, color: "#6B7280", marginBottom: 6 }}>
             Have a room name? Join here:
-          </Text>
-          <TextInput
+          </Text> */}
+          {/* <TextInput
             value={joinRoomInput}
             onChangeText={setJoinRoomInput}
             placeholder="Enter room name..."
@@ -332,8 +346,8 @@ export default function MyProfile() {
               color: "#111827",
               marginBottom: 10,
             }}
-          />
-          <Pressable
+          /> */}
+          {/* <Pressable
             onPress={handleJoinCall}
             style={{
               backgroundColor: "#2C64B3",
@@ -345,8 +359,8 @@ export default function MyProfile() {
             <Text style={{ color: "#fff", fontSize: 15, fontWeight: "600" }}>
               Join Call
             </Text>
-          </Pressable>
-        </View>  */}
+          </Pressable> */}
+        </View>  
 
         
         <View style={{ alignItems: "flex-end", marginTop: 8 }}>

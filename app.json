@@ -17,10 +17,15 @@
       "bundleIdentifier": "com.goarmit.app",
       "associatedDomains": [
         "applinks:aquamax-devstage.jove1.com"
-      ]
+       
+      ],
+      "infoPlist": {
+        "ITSAppUsesNonExemptEncryption": false
+      }
     },
     "android": {
       "package": "com.goarmit.app",
+      "versionCode": 12,
       "adaptiveIcon": {
         "foregroundImage": "./assets/svg/ARMIT-adaptive-v2.png",
         "backgroundColor": "#ffffff"

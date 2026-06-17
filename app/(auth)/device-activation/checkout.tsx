@@ -1,9 +1,9 @@
-import { useLocalSearchParams, useRouter } from "expo-router";
-import { WebView } from "react-native-webview";
-import { View, ActivityIndicator, Pressable, Text } from "react-native";
-import { useState, useRef } from "react";
 import { Ionicons } from "@expo/vector-icons";
+import { useLocalSearchParams, useRouter } from "expo-router";
+import { useRef, useState } from "react";
+import { ActivityIndicator, Pressable, Text, View } from "react-native";
 import Toast from "react-native-toast-message";
+import { WebView } from "react-native-webview";
 
 export default function Checkout() {
   const { url } = useLocalSearchParams<{ url: string }>();
@@ -64,7 +64,7 @@ export default function Checkout() {
           if (request.url.includes("aquamax-devstage.jove1.com/success")) {
             if (!hasRedirected.current) {
               hasRedirected.current = true;
-              setTimeout(() => {
+              setTimeout(() => { 
                 Toast.show({
                   type: "success",
                   text1: "Payment Successful! 🎉",

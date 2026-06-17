@@ -7,11 +7,12 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import { Tabs, usePathname } from "expo-router";
 import { StatusBar } from "expo-status-bar";
 import React, { useEffect } from "react";
-import { View } from "react-native";
+import { Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import Toast from "react-native-toast-message";
 import { Colors } from "../../assets/Color";
 import { toastConfig } from "../../components/ToastConfig";
+import IncomingCallModal from "@/components/IncomingCallModal";
 
 const TabLayout = () => {
   const pathname = usePathname();
@@ -38,18 +39,22 @@ const TabLayout = () => {
             tabBarActiveTintColor: Colors.PRIMARY,
             tabBarInactiveTintColor: Colors.dark.text,
             tabBarStyle: {
-              paddingBottom: 14,
-              height: 65,
+              paddingBottom: 8,
+              height: 60,
               elevation: 0,
               shadowColor: "transparent",
               borderTopWidth: 1,
               borderTopColor: "#D1D5DB",
               backgroundColor: "#F9FAFB",
             },
-            tabBarLabelStyle: {
-              fontSize: 12,
-              fontWeight: "bold",
-            },
+            tabBarLabel: ({ children, color }) => ( 
+              <Text
+                style={{ fontSize: 10, fontWeight: "bold", color }}
+                allowFontScaling={false}
+              >
+                {children}
+              </Text>
+            ),
           }}
         >
           {/* 1 — Dashboard */}
@@ -74,7 +79,7 @@ const TabLayout = () => {
             }}
           />
 
-          
+          {/* 3 — Add */}
           <Tabs.Screen
             name="add-device"
             options={{
@@ -136,7 +141,14 @@ const TabLayout = () => {
           <Tabs.Screen name="add-device/checkout" options={{ href: null }} />
           <Tabs.Screen name="add-device/success" options={{ href: null }} />
           <Tabs.Screen
-  name="call/[roomName]"
+            name="call/[roomName]"
+            options={{
+              href: null,
+              tabBarStyle: { display: "none" },
+            }}
+          />
+          <Tabs.Screen
+  name="call/contacts"
   options={{
     href: null,
     tabBarStyle: { display: "none" },
@@ -149,6 +161,7 @@ const TabLayout = () => {
           <Sidebar />
         </GlobalDrawer>
       </SafeAreaView>
+      <IncomingCallModal />  
 
       <Toast
         config={toastConfig}

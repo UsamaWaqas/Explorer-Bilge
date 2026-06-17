@@ -1,3 +1,5 @@
+
+
 import { Buffer } from 'buffer';
 global.Buffer = global.Buffer || Buffer;
 
@@ -8,16 +10,19 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { Stack } from "expo-router";
 import { StatusBar } from "expo-status-bar";
 import { useEffect } from "react";
-import { View } from "react-native";
+import { Text, TextInput, View } from "react-native";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 import Toast from "react-native-toast-message";
-import { Colors } from "../assets/Color";
 import { toastConfig } from "../components/ToastConfig";
 import { usePusherInit } from '../hooks/usePusher';
 import '../reactotronConfig';
 import "./global.css";
 
 
+(Text as any).defaultProps = (Text as any).defaultProps || {};
+(Text as any).defaultProps.allowFontScaling = false;
+(TextInput as any).defaultProps = (TextInput as any).defaultProps || {};
+(TextInput as any).defaultProps.allowFontScaling = false;
 
 const queryClient = new QueryClient();
 
