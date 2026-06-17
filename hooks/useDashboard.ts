@@ -192,7 +192,8 @@ export const useDashboard = () => {
       );
       return res.data?.stations ?? [];
     },
-    enabled: !!selectedDevice?.value && isMarinaWithLocation && isConnected === true,
+    enabled:
+      !!selectedDevice?.value && isMarinaWithLocation && isConnected === true,
     gcTime: 1000 * 60 * 60 * 2,
     networkMode: "always",
   });
@@ -282,10 +283,10 @@ export const useDashboard = () => {
       }, null);
 
       console.log("[Tides] enabled check:", {
-  device: !!selectedDevice?.value,
-  isMarinaWithLocation,
-  stations: stations.length,
-});
+        device: !!selectedDevice?.value,
+        isMarinaWithLocation,
+        stations: stations.length,
+      });
 
       const tidesRes = await axios.get(
         "https://api.tidesandcurrents.noaa.gov/api/prod/datagetter",
@@ -323,7 +324,8 @@ export const useDashboard = () => {
       await saveData(key, result);
       return result;
     },
-    enabled: !!selectedDevice?.value && isMarinaWithLocation && stations.length > 0,
+    enabled:
+      !!selectedDevice?.value && isMarinaWithLocation && stations.length > 0,
     // staleTime: 1000 * 60 * 30,
     // gcTime: 1000 * 60 * 60,
     networkMode: "always",
@@ -363,7 +365,7 @@ export const useDashboard = () => {
     formatTime,
     tides,
     isConnected,
-    isMarina,                // ← added
-    isMarinaWithLocation,    // ← added
+    isMarina, // ← added
+    isMarinaWithLocation, // ← added
   };
 };

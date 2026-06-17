@@ -56,7 +56,8 @@ export const formatValue = (data_type?: string, value?: any): string => {
   if (value == null && data_type !== 'voltage') return 'NA';
   switch (data_type) {
     case 'temperature':
-      return `${Math.round((Number(value) * 9) / 5 + 32)}°F`;
+      // return `${Math.round((Number(value) * 9) / 5 + 32)}°F`;
+      return `${value}°F`;
     case 'humidity':
       return `${value}%`;
     case 'voltage':
