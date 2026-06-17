@@ -1,6 +1,7 @@
 export interface User {
   id: number;
   Xnid: string | null;
+  xnid:  any;
   first_name: string;
   last_name: string;
   email: string;
@@ -56,4 +57,4 @@ export interface AuthState {
   initializeAuth: () => Promise<void>;
   setToken: (token: string) => Promise<void>;
   setUserDetail: (detail: Partial<UserDetail>) => Promise<void>;
-}
+}1
