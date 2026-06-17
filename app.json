@@ -16,7 +16,7 @@
       "supportsTablet": true,
       "bundleIdentifier": "com.goarmit.app",
       "associatedDomains": [
-        "applinks:api.example.com"
+        "applinks:goarmit.com"
        
       ],
       "infoPlist": {
@@ -38,7 +38,7 @@
           "data": [
             {
               "scheme": "https",
-              "host": "api.example.com",
+              "host": "goarmit.com",
               "pathPrefix": "/account-details"
             }
           ],

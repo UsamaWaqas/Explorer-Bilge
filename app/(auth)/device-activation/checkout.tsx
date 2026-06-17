@@ -39,7 +39,7 @@ export default function Checkout() {
         <Ionicons name="lock-closed" size={18} color="#10B981" />
       </View>
 
-      {/* Loading */}
+
       {loading && (
         <View style={{
           position: "absolute",
@@ -61,7 +61,7 @@ export default function Checkout() {
         onShouldStartLoadWithRequest={(request) => {
           console.log("🔗 URL:", request.url);
 
-          if (request.url.includes("api.example.com/success")) {
+          if (request.url.includes("goarmit.com/success")) {
             if (!hasRedirected.current) {
               hasRedirected.current = true;
               setTimeout(() => { 
