@@ -99,7 +99,6 @@ export const usePackets = ({ device_id }: UsePacketsOptions = {}) => {
       },
     );
 
-
   const products = useMemo(
     () => productsResponse?.data ?? [],
     [productsResponse?.data],
@@ -162,12 +161,14 @@ export const usePackets = ({ device_id }: UsePacketsOptions = {}) => {
         xNID: xNID ?? row.xNID,
 
         device_type_name: row.device_type_name ?? device_type_name,
-        product_id:row.product_id ?? product_id
+        product_id: row.product_id ?? product_id,
       })),
     };
   }, [packetsResponse]);
   console.log(
-    "API rdssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssows:",endpoint,normalizedResponse
+    "API rdssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssssows:",
+    endpoint,
+    normalizedResponse,
     // JSON.stringify(normalizedResponse?.data, null, 2),
   );
 

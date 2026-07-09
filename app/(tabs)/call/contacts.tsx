@@ -1,5 +1,5 @@
 import { useRouter } from "expo-router";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import {
   ActivityIndicator,
   FlatList,
@@ -8,11 +8,16 @@ import {
   TextInput,
   View,
 } from "react-native";
+import Toast from "react-native-toast-message";
 import { get, post } from "../../../api/apiHelper";
 import { Colors } from "../../../assets/Color";
 import { useAuthStore } from "../../../store/authStore";
 import { useCallStore } from "../../../store/callStore";
-import { buildPrivateRoom } from "../../../utils/roomBuilder";
+// FIX (static room reuse / zombie session): buildPrivateRoom() alone gives
+// the same room name every time these two people call each other. We now
+// use buildNewCallRoom(), which appends a fresh session id, so every call
+// gets its own Jitsi room and can't collide with a leftover session.
+import { buildNewCallRoom } from "../../../utils/roomBuilder";
 
 interface Customer {
   id: number;
@@ -23,17 +28,33 @@ interface Customer {
   title: string;
 }
 
+// FIX (PII logging): all the verbose debug logging that used to run
+// unconditionally (even in release builds) now goes through devLog, which
+// is a no-op outside __DEV__. This keeps emails/room names/channel names
+// out of production device logs.
+function devLog(...args: unknown[]) {
+  if (__DEV__) {
+    // eslint-disable-next-line no-console
+    console.log(...args);
+  }
+}
+
 export default function CallContactsScreen() {
   const router = useRouter();
   const user = useAuthStore((s) => s.user);
   const myXnid = user?.xnid;
-  console.log("xnid..................................................................", myXnid,user);
+  const setOutgoingCall = useCallStore((s) => s.setOutgoingCall);
+
+  devLog("[Contacts] SCREEN MOUNTED, user.xnid:", myXnid, "user.email:", user?.email);
 
   const [customers, setCustomers] = useState<Customer[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
   const [callingId, setCallingId] = useState<number | null>(null);
-  const setIncomingCall = useCallStore((s) => s.setIncomingCall);
+  // FIX (double-tap): setCallingId(...) is async, so a fast double-tap could
+  // fire two invites before the state re-render disables the button. This
+  // ref flips synchronously on the very first tap.
+  const callInFlightRef = useRef(false);
 
   async function fetchCustomers(query = "") {
     setLoading(true);
@@ -43,10 +64,13 @@ export default function CallContactsScreen() {
       search: query,
       title: "",
     });
+
     if (!res?.error && res?.success) {
       const list: Customer[] = res?.data?.data ?? [];
-      // Don't show yourself in the list
-      setCustomers(list.filter((c) => c.xnid !== myXnid));
+      const filtered = list.filter((c) => c.xnid !== myXnid);
+      setCustomers(filtered);
+    } else {
+      devLog("[Contacts] fetchCustomers failed or returned error:", res);
     }
     setLoading(false);
   }
@@ -60,38 +84,84 @@ export default function CallContactsScreen() {
   }
 
   async function handleCall(customer: Customer) {
-    const roomName = buildPrivateRoom(myXnid, customer.xnid);
-
+    if (callInFlightRef.current) return;
+    callInFlightRef.current = true;
     setCallingId(customer.id);
+
+    // FIX: fresh room name every call instead of the static
+    // buildPrivateRoom() pair-room, so a previous (possibly not-fully-closed)
+    // Jitsi session can never collide with this new call.
+    const roomName = buildNewCallRoom(String(user?.email), String(customer.email));
+
+    // NOTE: ye same format hai jo getCallChannelName() (constants/pusher.ts)
+    // actually subscribe karta hai — public channel, koi "private-" prefix
+    // ya md5 hashing nahi. Pehle ye debug line galat "private-user.<md5>"
+    // dikhati thi jo asal subscribed channel se match nahi karti thi.
+    const receiverChannel = `user.${String(customer.email)}`;
+    devLog(
+      "[Contacts] Expecting backend to fire 'incoming.call' on channel:",
+      receiverChannel,
+      "roomName:",
+      roomName,
+    );
+
     try {
-      // Backend should: trigger Pusher "incoming-call" event on the
-      // target user's channel (notifi-sensor-data-<targetUserId>) with
-      // { roomName, callerName, callerXnid }.
-      await post(
-        "/api/call/invite",
-        {
-          targetXnid: customer.xnid,
+      const invitePayload = {
+        targetXnid: customer.email,
+        roomName,
+        callerName: getDisplayName(),
+        callerXnid: user?.email,
+      };
+
+      const inviteRes = await post("/api/call/invite", invitePayload, {}, false);
+
+      if (!inviteRes || inviteRes?.error) {
+        // FIX (silent-fail invite): previously the screen navigated into
+        // the call room regardless of whether the invite actually reached
+        // the backend. Now, if the invite fails, we tell the caller and
+        // stop here — we never enter a room the other person was never
+        // notified about.
+        devLog("[Contacts] /api/call/invite FAILED:", inviteRes);
+        Toast.show({
+          type: "error",
+          text1: "Couldn't start the call",
+          text2: inviteRes?.message || "Please check your connection and try again.",
+        });
+        return;
+      }
+
+      // Invite reached the backend — now show the caller a proper
+      // "Calling…/Ringing…" screen and wait for accept/decline/timeout,
+      // instead of jumping straight into the Jitsi WebView.
+      setOutgoingCall({
+        roomName,
+        calleeXnid: customer.email,
+        calleeName: `${customer.first_name} ${customer.last_name}`.trim(),
+        callerXnid: String(user?.email),
+        callerName: getDisplayName(),
+      });
+
+      router.push({
+        pathname: "/(tabs)/call/calling",
+        params: {
           roomName,
+          calleeName: `${customer.first_name} ${customer.last_name}`.trim(),
+          calleeXnid: customer.email,
+          callerXnid: user?.email,
           callerName: getDisplayName(),
-          callerXnid: myXnid,
         },
-        {},
-        false, // don't show error toast if this endpoint isn't ready yet
-      );
+      });
     } catch (err) {
-      console.warn("[Call] invite failed, continuing to join room anyway", err);
+      devLog("[Contacts] /api/call/invite EXCEPTION:", err);
+      Toast.show({
+        type: "error",
+        text1: "Couldn't start the call",
+        text2: "Something went wrong. Please try again.",
+      });
     } finally {
       setCallingId(null);
+      callInFlightRef.current = false;
     }
-
-    router.push({
-      pathname: "/(tabs)/call/[roomName]",
-      params: {
-        roomName,
-        displayName: getDisplayName(),
-        xnid: myXnid,
-      },
-    });
   }
 
   return (
@@ -99,22 +169,6 @@ export default function CallContactsScreen() {
       <Text style={{ fontSize: 18, fontWeight: "700", color: "#2C64B3", marginBottom: 16 }}>
         Call a Contact
       </Text>
-
-      {/* TEMPORARY TEST BUTTON — simulates an incoming-call Pusher event
-          without needing the backend /api/call/invite endpoint. Remove
-          once backend wiring is confirmed. */}
-      <Pressable
-        onPress={() =>
-          setIncomingCall({
-            roomName: "test-room-123",
-            callerName: "Test Caller",
-            callerXnid: "xnid:user:dummy",
-          })
-        }
-        style={{ backgroundColor: "#999", padding: 12, borderRadius: 8, marginBottom: 16 }}
-      >
-        <Text style={{ color: "#fff", textAlign: "center" }}>🧪 Simulate Incoming Call</Text>
-      </Pressable>
 
       <TextInput
         value={search}

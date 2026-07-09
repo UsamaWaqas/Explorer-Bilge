@@ -11,7 +11,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { useQuery } from "@tanstack/react-query";
 import Toast from "react-native-toast-message";
 import { get, post } from "../../api/apiHelper";
-import AnimatedSwitch from "../../components/Switch"; // update path as per your project
+import AnimatedSwitch from "../../components/Switch";
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
@@ -303,7 +303,6 @@ function ConfigureAlerts() {
         </ScrollView>
       </View>
 
-      <Toast />
     </View>
   );
 }

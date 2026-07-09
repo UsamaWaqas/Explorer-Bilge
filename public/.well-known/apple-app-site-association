@@ -1,0 +1,11 @@
+{
+  "applinks": {
+    "apps": [],
+    "details": [
+      {
+        "appID": "A2G24VAR3D.com.goarmit.app",
+        "paths": ["/account-details/*"]
+      }
+    ]
+  }
+}

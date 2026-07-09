@@ -1,6 +1,6 @@
+import Toast from "react-native-toast-message";
 import { post } from "../api/apiHelper";
 import { useAuthStore } from "../store/authStore";
-import Toast from "react-native-toast-message";
 
 export const loginService = async (email: string, password: string) => {
   const response = await post(

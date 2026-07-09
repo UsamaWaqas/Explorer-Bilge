@@ -12,6 +12,7 @@ import {
 } from "react-native";
 import { get, post, put } from "../../api/apiHelper";
 import { useAuthStore } from "../../store/authStore";
+// import { isAlreadyOnCall } from "../../store/callStore";
 import { buildPrivateRoom } from "../../utils/roomBuilder";
 
 function Field({
@@ -125,6 +126,18 @@ export default function MyProfile() {
   }
 
   function startCall(roomName: string) {
+    // FIX: ye function pehle activeRoomName bilkul check nahi karta tha —
+    // isi wajah se sidebar → Profile → "Join Call"/"Generate & Share Link"
+    // se ongoing call ke doran bhi ek dusra call (dusri WebView instance)
+    // start ho jata tha, jo camera/state conflict paida karta tha. Ab har
+    // call yahin se guard hoti hai.
+    // if (isAlreadyOnCall()) {
+    //   Alert.alert(
+    //     "Already on a call",
+    //     "You're currently on an active call. Please end it before starting a new one.",
+    //   );
+    //   return;
+    // }
     router.push({
       pathname: "/(tabs)/call/[roomName]",
       params: {
@@ -299,7 +312,7 @@ export default function MyProfile() {
              Video Call
           </Text> */}
 
-          {/* <Pressable
+        {/* <Pressable
             onPress={handleGenerateAndShare}
             style={{
               backgroundColor: "#16A34A",
@@ -324,14 +337,14 @@ export default function MyProfile() {
   }}
 >
   <Text style={{ color: "#fff", fontSize: 15, fontWeight: "600" }}>
-    📞 Call a Contact
+    📞 Call a contact
   </Text>
 </Pressable> */}
 
           {/* <Text style={{ fontSize: 14, color: "#6B7280", marginBottom: 6 }}>
             Have a room name? Join here:
-          </Text> */}
-          {/* <TextInput
+          </Text>
+          <TextInput
             value={joinRoomInput}
             onChangeText={setJoinRoomInput}
             placeholder="Enter room name..."
@@ -345,8 +358,8 @@ export default function MyProfile() {
               fontSize: 15,
               color: "#111827",
               marginBottom: 10,
-            }}
-          /> */}
+            }} */}
+          {/* /> */}
           {/* <Pressable
             onPress={handleJoinCall}
             style={{
@@ -360,7 +373,7 @@ export default function MyProfile() {
               Join Call
             </Text>
           </Pressable> */}
-        </View>  
+        </View>   
 
         
         <View style={{ alignItems: "flex-end", marginTop: 8 }}>
