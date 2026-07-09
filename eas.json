@@ -11,7 +11,7 @@
     "preview": {
       "distribution": "internal",
       "android": {
-        "buildType": "apk"   
+        "buildType": "apk"
       }
     },
     "production": {
@@ -19,6 +19,12 @@
     }
   },
   "submit": {
-    "production": {}
+    "production": {
+      "ios": {
+        "ascApiKeyPath": "./keys/AuthKey_ASC_KEY_ID_REDACTED.p8",
+        "ascApiKeyIssuerId": "ASC_ISSUER_ID_REDACTED",
+        "ascApiKeyId": "ASC_KEY_ID_REDACTED"
+      }
+    }
   }
 }

@@ -37,7 +37,7 @@ export const useWeather = () => {
   // manages loadingWeather correctly on its own, so this abstraction was
   // both redundant and misleading.
 
-  const fetchWeather = async (device: Device) => {
+  const fetchWeather = async (device: Device | null | undefined) => {
     // ── FIX 1: top-level undefined guard ─────────────────────────────────
     // Catches the case where device itself is undefined/null before
     // trying to access any property on it (the source of the crash).

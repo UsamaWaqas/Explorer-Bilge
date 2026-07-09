@@ -170,8 +170,13 @@ export const useDashboard = () => {
   useEffect(() => {
     if (selectedDevice?.raw) {
       fetchWeather(selectedDevice.raw);
+    } else if (!loadingDevices) {
+      // Devices finished loading and there's no device at all
+      // (empty account) → stop the weather skeleton instead of
+      // leaving loadingWeather stuck at its initial `true` value.
+      fetchWeather(null);
     }
-  }, [selectedDevice?.value]);
+  }, [selectedDevice?.value, loadingDevices]);
 
   // ── 2. Marina flags ────────────────────────────────────
   // isMarina: just checks where_from — used for showing Tides tile vs Sunrise/Sunset

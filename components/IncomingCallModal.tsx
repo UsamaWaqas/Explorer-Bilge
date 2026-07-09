@@ -1,35 +1,73 @@
 import { useRouter } from "expo-router";
 import { Modal, Pressable, StyleSheet, Text, View } from "react-native";
+import { post } from "../api/apiHelper";
 import { Colors } from "../assets/Color";
-import { useCallStore } from "../store/callStore";
 import { useIncomingCall } from "../hooks/useIncomingCall";
+import { useAuthStore } from "../store/authStore";
+import { useCallStore } from "../store/callStore";
 
-// Mount this once near the root (e.g. inside (tabs)/_layout.tsx) so it can
-// pop up over any screen when an "incoming-call" Pusher event arrives.
 export default function IncomingCallModal() {
   useIncomingCall();
 
   const router = useRouter();
+  const user = useAuthStore((s) => s.user);
   const incomingCall = useCallStore((s) => s.incomingCall);
   const clearIncomingCall = useCallStore((s) => s.clearIncomingCall);
+  const setCallAccepted = useCallStore((s) => s.setCallAccepted);
+  const setActiveRoomName = useCallStore((s) => s.setActiveRoomName);
 
   if (!incomingCall) return null;
 
   const handleAccept = () => {
-    const { roomName } = incomingCall;
+    const { roomName, callerXnid, callerName } = incomingCall;
     clearIncomingCall();
+    setCallAccepted(true);
+    setActiveRoomName(roomName);
+
+    // FIX: previously nothing told the backend the call was actually
+    // accepted — this is best-effort/fire-and-forget so a slow or failing
+    // request never blocks the receiver from joining. (Backend endpoint
+    // may still need to be added — confirm with backend team; until then
+    // this call will just no-op/404 harmlessly.)
+    post(
+      "/api/call/accept",
+      { roomName, targetXnid: callerXnid },
+      {},
+      false,
+    ).catch(() => {});
+
     router.push({
       pathname: "/(tabs)/call/[roomName]",
       params: {
         roomName,
-        displayName: "User", // profile screen passes the real display name on outgoing calls
-        xnid: "", // Screen2MeCall falls back gracefully if empty
+        displayName: `${user?.first_name ?? ""} ${user?.last_name ?? ""}`.trim() || "User",
+        xnid: (user as any)?.email ?? "",
+        // FIX (symmetric early-hangup notify): this is who [roomName].tsx
+        // will notify with /api/call/reject if THIS side (the receiver)
+        // hangs up before the call is genuinely connected. Previously this
+        // was never passed, so a receiver hanging up early left the caller
+        // stuck on "Connecting…" with no signal.
+        calleeXnid: callerXnid,
+        callerName,
       },
     });
   };
 
-  const handleDecline = () => {
+  const handleDecline = async () => {
     clearIncomingCall();
+    try {
+      await post(
+        "/api/call/reject",
+        {
+          targetXnid: incomingCall.callerXnid,
+          roomName: incomingCall.roomName,
+          callerName: incomingCall.callerName,
+          callerXnid: incomingCall.callerXnid,
+        },
+        {},
+        false,
+      );
+    } catch {}
   };
 
   return (

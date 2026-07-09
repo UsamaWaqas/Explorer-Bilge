@@ -17,13 +17,19 @@ import { post } from "../../../api/apiHelper";
 import ArmITLogo from "../../../assets/images/armIT_logo.svg";
 import GlobalInput from "../../../components/Input";
 import { emptyDevice, useAddDeviceStore } from "../../../store/addDeviceStore";
+import { useAuthStore } from "../../../store/authStore";
 
 const AddDeviceScreen: React.FC = () => {
   const router = useRouter();
   const { id } = useLocalSearchParams();
-  const userId = id as string;
+  const authUser = useAuthStore((state) => state.user);
+  // Prefer the id passed via navigation params, but fall back to the
+  // logged-in user's euid from the auth store (same pattern step-two
+  // uses: userEuid = user?.euid ?? euid) so this screen still works
+  // even if some future navigation path forgets to pass the param.
+  const userId = ((id as string) || authUser?.euid || "") as string;
 
-  console.log("userId from params:", userId);
+  console.log("userId resolved:", userId, "| from param:", id, "| from auth store:", authUser?.euid);
 
   const { devices, errors, setDevices, setErrors } = useAddDeviceStore();
   const [loadingIndex, setLoadingIndex] = useState<number | null>(null);

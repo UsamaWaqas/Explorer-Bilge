@@ -10,7 +10,6 @@ export function usePusherInit() {
   const { connect, disconnect } = usePusherStore();
   const token = useAuthStore((s) => s.token);
 
-  // ── FIX 5: AppState listener — minimize/background se wapas aao toh reconnect ──
   useEffect(() => {
     if (!token) {
       console.log("[PusherInit] no token, skipping connect");
@@ -25,15 +24,18 @@ export function usePusherInit() {
     const handleAppStateChange = async (nextState: AppStateStatus) => {
       if (nextState === "active") {
         console.log("[PusherInit] app active → reconnecting...");
-        await disconnect();       // stale state clear
-        await connect(token);     // fresh connect
+        await disconnect(); // stale state clear
+        await connect(token); // fresh connect
       } else if (nextState === "background") {
         console.log("[PusherInit] app background → disconnecting...");
         await disconnect();
       }
     };
 
-    const subscription = AppState.addEventListener("change", handleAppStateChange);
+    const subscription = AppState.addEventListener(
+      "change",
+      handleAppStateChange,
+    );
 
     return () => {
       console.log("[PusherInit] cleanup → disconnecting");
@@ -49,7 +51,9 @@ export function usePusherEvent(onEvent: () => void) {
   const user = useAuthStore((s) => s.user);
   const channelRef = useRef<string | null>(null);
   const onEventRef = useRef(onEvent);
-  const callbackRef = useRef<((e: { eventName: string; data: unknown }) => void) | null>(null);
+  const callbackRef = useRef<
+    ((e: { eventName: string; data: unknown }) => void) | null
+  >(null);
 
   useEffect(() => {
     onEventRef.current = onEvent;
@@ -68,7 +72,13 @@ export function usePusherEvent(onEvent: () => void) {
     const channelName = getPusherChannelName(user.id);
     channelRef.current = channelName;
 
-    const callback = ({ eventName, data }: { eventName: string; data: unknown }) => {
+    const callback = ({
+      eventName,
+      data,
+    }: {
+      eventName: string;
+      data: unknown;
+    }) => {
       console.log("[PusherEvent] event received:", eventName);
 
       if (eventName !== PUSHER_EVENTS.DEVICE_DATA_UPDATED) {
@@ -87,7 +97,10 @@ export function usePusherEvent(onEvent: () => void) {
 
     return () => {
       if (channelRef.current && callbackRef.current) {
-        console.log("[PusherEvent] cleanup → unsubscribing:", channelRef.current);
+        console.log(
+          "[PusherEvent] cleanup → unsubscribing:",
+          channelRef.current,
+        );
         unsubscribe(channelRef.current, callbackRef.current);
         channelRef.current = null;
         callbackRef.current = null;
@@ -107,7 +120,12 @@ export function usePusher(deviceId?: string | number) {
   }, [deviceId]);
 
   usePusherEvent(() => {
-    console.log("[Pusher] invalidating query for deviceId:", deviceIdRef.current);
-    queryClient.invalidateQueries({ queryKey: ["monitoring", deviceIdRef.current] });
+    console.log(
+      "[Pusher] invalidating query for deviceId:",
+      deviceIdRef.current,
+    );
+    queryClient.invalidateQueries({
+      queryKey: ["monitoring", deviceIdRef.current],
+    });
   });
 }

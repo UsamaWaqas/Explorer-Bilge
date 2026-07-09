@@ -146,7 +146,15 @@ export default function Sidebar() {
 
   const handleAddDevice = () => {
     close();
-    router.push("/(tabs)/add-device");
+    router.push({
+      pathname: "/(tabs)/add-device",
+      params: { id: String(user?.euid ?? "") },
+    });
+  };
+
+  const handleSupport = () => {
+    close();
+    // router.push("/(tabs)/call/contacts");
   };
 
   return (
@@ -157,7 +165,6 @@ export default function Sidebar() {
       contentContainerStyle={{ paddingBottom: 40 }}
     >
       <Text className="text-[#2C64B3] text-lg  font-bold mb-2">PROFILE</Text>
-
       <View className="flex flex-col gap-y-3">
 
         {/* User Info Card */}
@@ -167,14 +174,23 @@ export default function Sidebar() {
               {getInitials(sidebarName)}
             </Text>
           </View>
-          <View className="overflow-hidden ml-3">
-            <Text className="text-gray-800 text-xl font-bold">
-              {sidebarName || "My Profile"}
-            </Text>
-            <Text className="text-[#6B7280] text-sm">
-              {sidebarEmail || "My Account"}
-            </Text>
-          </View>
+         <View className="flex-1 ml-3 overflow-hidden">
+  <Text
+    className="text-gray-800 text-xl font-bold"
+    numberOfLines={1}
+    ellipsizeMode="tail"
+  >
+    {sidebarName || "My Profile"}
+  </Text>
+
+  <Text
+    className="text-[#6B7280] text-sm"
+    numberOfLines={1}
+    ellipsizeMode="tail"
+  >
+    {sidebarEmail || "My Account"}
+  </Text>
+</View>
         </View>
 
         {/* Edit Profile + Notif Alerts */}
@@ -295,7 +311,10 @@ export default function Sidebar() {
         </View>
 
         {/* Support */}
-        <Pressable className="bg-[#7B868C] h-16 w-full rounded-md flex-row items-center px-4">
+        <Pressable
+          onPress={handleSupport}
+          className="bg-[#7B868C] h-16 w-full rounded-md flex-row items-center px-4"
+        >
           <Ionicons name="headset" size={32} color="#C9D0D3" />
           <Text className="text-[#C9D0D3] text-xl font-bold ml-3">SUPPORT</Text>
         </Pressable>
