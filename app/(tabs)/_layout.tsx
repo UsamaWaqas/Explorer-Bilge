@@ -1,21 +1,23 @@
+// import CallOverlay from "@/components/CallOverlay";
 import GlobalDrawer from "@/components/Globalmodal";
 import Header from "@/components/Header";
+import IncomingCallModal from "@/components/IncomingCallModal";
 import NetInfoBanner from "@/components/NetInfoBanner";
 import Sidebar from "@/components/Sidebar";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { Tabs, usePathname } from "expo-router";
+import { Tabs, usePathname, useRouter } from "expo-router";
 import { StatusBar } from "expo-status-bar";
 import React, { useEffect } from "react";
 import { Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import Toast from "react-native-toast-message";
 import { Colors } from "../../assets/Color";
-import { toastConfig } from "../../components/ToastConfig";
-import IncomingCallModal from "@/components/IncomingCallModal";
+import { useAuthStore } from "../../store/authStore";
 
 const TabLayout = () => {
   const pathname = usePathname();
+  const router = useRouter();
+  const user = useAuthStore((state) => state.user);
 
   useEffect(() => {
     AsyncStorage.setItem("lastRoute", pathname);
@@ -105,6 +107,18 @@ const TabLayout = () => {
                 </View>
               ),
             }}
+            listeners={{
+              tabPress: (e) => {
+                // Default tab-press navigation carries no params, so the
+                // add-device screen ends up with an undefined id. Intercept
+                // it and push manually with the current user's id.
+                e.preventDefault();
+                router.push({
+                  pathname: "/(tabs)/add-device",
+                  params: { id: String(user?.euid ?? "") },
+                });
+              },
+            }}
           />
 
           {/* 4 — Events */}
@@ -140,6 +154,7 @@ const TabLayout = () => {
           <Tabs.Screen name="add-device/step-three/[id]" options={{ href: null }} />
           <Tabs.Screen name="add-device/checkout" options={{ href: null }} />
           <Tabs.Screen name="add-device/success" options={{ href: null }} />
+          {/* <Tabs.Screen name="add-device/success" options={{ href: null }} /> */}
           <Tabs.Screen
             name="call/[roomName]"
             options={{
@@ -154,6 +169,13 @@ const TabLayout = () => {
     tabBarStyle: { display: "none" },
   }}
 />
+ <Tabs.Screen
+  name="call/calling"
+  options={{
+    href: null,
+    tabBarStyle: { display: "none" },
+  }}
+/>
         </Tabs>
 
         <NetInfoBanner />
@@ -161,14 +183,15 @@ const TabLayout = () => {
           <Sidebar />
         </GlobalDrawer>
       </SafeAreaView>
-      <IncomingCallModal />  
-
-      <Toast
-        config={toastConfig}
-        position="top"
-        topOffset={60}
-        visibilityTime={3000}
-      />
+      <IncomingCallModal />
+      {/* FIX (persistent call): mounted here, outside <Tabs>, so it never
+          unmounts on navigation — it renders the active call full-screen
+          or as a minimized floating bubble, driven entirely by
+          store/callStore's `activeCall` state. */}
+      {/* <CallOverlay /> */}
+      {/* Toast is mounted once, at the app root (app/_layout.tsx).
+          A second instance here caused Toast.show() to sometimes target
+          a stale/unmounted ref on iOS, so toasts silently failed to render. */}
     </>
   );
 };

@@ -5,7 +5,7 @@ import { TOKEN_KEY } from "../constants/storage";
 import { useAuthStore } from "../store/authStore";
 
 const axiosInstance = axios.create({
-  baseURL: process.env.EXPO_PUBLIC_API_URL, 
+  baseURL: process.env.EXPO_PUBLIC_API_URL,
   headers: {
     "Content-Type": "application/json",
     Origin: process.env.EXPO_PUBLIC_DOMAIN_URL,
@@ -13,13 +13,10 @@ const axiosInstance = axios.create({
   },
 });
 
-// Request interceptor
 axiosInstance.interceptors.request.use(
   async (config) => {
-    // Check internet before every request
     const netState = await NetInfo.fetch();
     if (!netState.isConnected) {
-      // Reject silently with custom flag
       return Promise.reject({ isOffline: true });
     }
 
@@ -32,7 +29,6 @@ axiosInstance.interceptors.request.use(
   (error) => Promise.reject(error),
 );
 
-// Response interceptor
 axiosInstance.interceptors.response.use(
   (response) => response,
   async (error) => {
