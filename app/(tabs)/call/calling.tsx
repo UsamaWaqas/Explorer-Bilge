@@ -28,30 +28,55 @@ export default function CallingRouteScreen() {
   const cancelledRef = useRef(false);
   const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  // FIX: jab bhi CALL_ACCEPTED aata hai, global useIncomingCall hook khud
-  // activeRoomName set karke [roomName] screen par navigate kar deta hai
-  // (see hooks/useIncomingCall.ts -> acceptedCallback). Hum yahan sirf
-  // detect karte hain ke ye ho chuka hai taake dobara navigate/cancel na ho.
-  //
-  // FIX (glare cleanup): agar hamara outgoingCall store se clear ho chuka
-  // hai (ya kisi aur roomName par point kar raha hai) to iska matlab ye call
-  // kisi aur tareeqe se already resolve ho chuki hai — misal ke taur par
-  // glare-resolution (hooks/useIncomingCall.ts) ne isko khud reject/accept
-  // kar diya. Aisi soorat mein bhi is screen ko apna 45s "no_answer" reject
-  // nahi bhejna chahiye, warna ek already-resolved call ke liye stale
-  // request chali jayegi.
+  // ─── DEBUG: confirm this screen actually mounted with the params we
+  // expect. If roomName here doesn't match what contacts.tsx sent in the
+  // invite, or what useIncomingCall.ts later receives in call.accepted,
+  // that alone explains a stuck screen.
   useEffect(() => {
+    console.log("############################################################");
+    console.log("[CallingScreen] MOUNTED");
+    console.log("[CallingScreen] roomName param:", roomName);
+    console.log("[CallingScreen] calleeName:", calleeName, "| calleeXnid:", calleeXnid);
+    console.log("[CallingScreen] callerName:", callerName, "| callerXnid:", callerXnid);
+    console.log("[CallingScreen] store.outgoingCall at mount:", JSON.stringify(useCallStore.getState().outgoingCall));
+    console.log("[CallingScreen] store.activeRoomName at mount:", useCallStore.getState().activeRoomName);
+    console.log("############################################################");
+
+    return () => {
+      console.log("[CallingScreen] UNMOUNTED — roomName was:", roomName);
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // ─── DEBUG: this is the exact effect that's supposed to catch
+  // call.accepted and stop the ring-timeout from firing later. Log every
+  // time activeRoomName or outgoingCall changes while this screen is up,
+  // so we can see precisely what state this screen believes it's in at
+  // any moment.
+  useEffect(() => {
+    console.log(
+      "[CallingScreen] state change — activeRoomName:", activeRoomName,
+      "| outgoingCall:", JSON.stringify(outgoingCall),
+      "| my roomName:", roomName,
+    );
+
     if (activeRoomName === roomName) {
+      console.log("[CallingScreen] ✅ activeRoomName now matches my roomName — call was accepted, marking cancelledRef=true.");
       cancelledRef.current = true;
       return;
     }
     if (!outgoingCall || outgoingCall.roomName !== roomName) {
+      console.log("[CallingScreen] ⚠️ outgoingCall no longer matches my roomName (cleared or superseded elsewhere) — marking cancelledRef=true.");
       cancelledRef.current = true;
     }
   }, [activeRoomName, outgoingCall, roomName]);
 
   const sendCancel = (reason: "cancelled" | "no_answer") => {
-    if (cancelledRef.current) return;
+    if (cancelledRef.current) {
+      console.log("[CallingScreen] sendCancel(" + reason + ") called but cancelledRef already true — skipping duplicate send.");
+      return;
+    }
+    console.log("[CallingScreen] 📤 Sending /api/call/reject reason:", reason, "| roomName:", roomName, "| targetXnid:", calleeXnid);
     cancelledRef.current = true;
     clearOutgoingCall();
     post(
@@ -65,21 +90,31 @@ export default function CallingRouteScreen() {
       },
       {},
       false,
-    ).catch(() => {});
+    )
+      .then((res) => console.log("[CallingScreen] reject API response:", JSON.stringify(res)))
+      .catch((err) => console.log("[CallingScreen] reject API error:", err));
   };
 
   const goBack = () => {
+    console.log("[CallingScreen] goBack() — navigating to contacts");
     router.replace("/(tabs)/call/contacts");
   };
 
   const handleCancel = () => {
+    console.log("[CallingScreen] User tapped Cancel button");
     sendCancel("cancelled");
     goBack();
   };
 
   useEffect(() => {
+    console.log("[CallingScreen] Starting", RING_TIMEOUT_MS, "ms no-answer timer for roomName:", roomName);
     timeoutRef.current = setTimeout(() => {
-      if (cancelledRef.current) return;
+      console.log("[CallingScreen] ⏰ RING TIMEOUT FIRED for roomName:", roomName, "| cancelledRef:", cancelledRef.current);
+      if (cancelledRef.current) {
+        console.log("[CallingScreen] Timeout fired but cancelledRef already true — call was already resolved, doing nothing.");
+        return;
+      }
+      console.log("[CallingScreen] ❌ Treating as NO ANSWER — sending reject + navigating back.");
       sendCancel("no_answer");
       Toast.show({
         type: "info",
@@ -90,6 +125,7 @@ export default function CallingRouteScreen() {
     }, RING_TIMEOUT_MS);
 
     return () => {
+      console.log("[CallingScreen] Clearing no-answer timer for roomName:", roomName);
       if (timeoutRef.current) clearTimeout(timeoutRef.current);
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps

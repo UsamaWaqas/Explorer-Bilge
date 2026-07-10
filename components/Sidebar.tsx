@@ -1,6 +1,7 @@
-import { useEffect, useState } from "react";
 import { Ionicons } from "@expo/vector-icons";
+import { useQueryClient } from "@tanstack/react-query";
 import { useRouter } from "expo-router";
+import { useEffect, useState } from "react";
 import { Pressable, ScrollView, Text, View } from "react-native";
 import { get, post } from "../api/apiHelper";
 import { logoutService } from "../services/authService";
@@ -9,7 +10,6 @@ import { useDrawerStore } from "../store/ModalStore";
 import { UserDetail } from "../types/ auth.types";
 import GlobalInput from "./Input";
 import AnimatedSwitch from "./Switch";
-import { useQueryClient } from "@tanstack/react-query";
 
 
 export default function Sidebar() {
@@ -154,7 +154,7 @@ export default function Sidebar() {
 
   const handleSupport = () => {
     close();
-    // router.push("/(tabs)/call/contacts");
+    router.push("/(tabs)/call/contacts");
   };
 
   return (

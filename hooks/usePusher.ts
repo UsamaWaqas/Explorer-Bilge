@@ -3,6 +3,7 @@ import { useEffect, useRef } from "react";
 import { AppState, AppStateStatus } from "react-native";
 import { getPusherChannelName, PUSHER_EVENTS } from "../constants/pusher";
 import { useAuthStore } from "../store/authStore";
+import { useCallStore } from "../store/callStore";
 import { usePusherStore } from "../store/pusherStore";
 
 // ── Pusher Init ─────────────────────────────────────────
@@ -21,7 +22,31 @@ export function usePusherInit() {
     connect(token);
 
     // App foreground/background handle karo
+    //
+    // FIX (call-aware teardown): agar user kisi call ke beech mein hai —
+    // active room mein, ya outgoing "Calling…" pe, ya incoming call modal
+    // dikha rha hai — to Pusher ko destroy/rebuild MAT karo. Pusher client
+    // events replay/queue nahi karta, so agar exact isi window mein
+    // call.accepted/call.rejected broadcast ho jaye to woh event hamesha ke
+    // liye miss ho jata hai aur caller "Calling…" screen pe atka reh jata
+    // hai 45s timeout tak. Ye AppState bhi bohot zyada frequently fire ho
+    // raha tha (background/active baar baar) — is guard se un spurious
+    // transitions ke dauran bhi in-call connection safe rehta hai.
+    const isCallInProgress = () => {
+      const { activeRoomName, outgoingCall, incomingCall } =
+        useCallStore.getState();
+      return Boolean(activeRoomName || outgoingCall || incomingCall);
+    };
+
     const handleAppStateChange = async (nextState: AppStateStatus) => {
+      if (isCallInProgress()) {
+        console.log(
+          "[PusherInit] call in progress — skipping teardown for AppState:",
+          nextState,
+        );
+        return;
+      }
+
       if (nextState === "active") {
         console.log("[PusherInit] app active → reconnecting...");
         await disconnect(); // stale state clear

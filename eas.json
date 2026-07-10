@@ -23,7 +23,8 @@
       "ios": {
         "ascApiKeyPath": "/home/chirptech/Desktop/My-Armit/keys/AuthKey_ZZSY482JVR.p8",
         "ascApiKeyIssuerId": "ef5f08f9-3bec-489d-a280-603306bb89b7",
-        "ascApiKeyId": "ZZSY482JVR"
+        "ascApiKeyId": "ZZSY482JVR",
+        "ascAppId": "6789198474"
       }
     }
   }
