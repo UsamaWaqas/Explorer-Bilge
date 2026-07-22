@@ -3,6 +3,7 @@ import GlobalDrawer from "@/components/Globalmodal";
 import Header from "@/components/Header";
 import IncomingCallModal from "@/components/IncomingCallModal";
 import NetInfoBanner from "@/components/NetInfoBanner";
+import OutgoingCallOverlay from "@/components/OutgoingCallOverlay";
 import Sidebar from "@/components/Sidebar";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import AsyncStorage from "@react-native-async-storage/async-storage";
@@ -13,6 +14,7 @@ import { Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Colors } from "../../assets/Color";
 import { useAuthStore } from "../../store/authStore";
+import CallOverlay from "@/components/CallOverlay";
 
 const TabLayout = () => {
   const pathname = usePathname();
@@ -184,6 +186,12 @@ const TabLayout = () => {
         </GlobalDrawer>
       </SafeAreaView>
       <IncomingCallModal />
+      {/* FIX (full-screen "Calling..." bug): pehle ye UI ek normal Tabs
+          route (call/calling.tsx) mein tha, is liye Header ke NEECHE render
+          hota tha. Ab CallOverlay jaisa hi persistent overlay hai - Header
+          bhi cover karta hai aur navigation se kabhi unmount nahi hota. */}
+      <OutgoingCallOverlay />
+      <CallOverlay />
       {/* FIX (persistent call): mounted here, outside <Tabs>, so it never
           unmounts on navigation — it renders the active call full-screen
           or as a minimized floating bubble, driven entirely by

@@ -1,3 +1,4 @@
+import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import { useEffect, useRef, useState } from "react";
 import {
@@ -39,11 +40,30 @@ function devLog(...args: unknown[]) {
   }
 }
 
+function getInitials(name: string) {
+  const parts = (name ?? "").trim().split(/\s+/).filter(Boolean);
+  if (parts.length === 0) return "?";
+  if (parts.length === 1) return parts[0][0]?.toUpperCase() ?? "?";
+  return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
+}
+
 export default function CallContactsScreen() {
   const router = useRouter();
   const user = useAuthStore((s) => s.user);
   const myXnid = user?.xnid;
   const setOutgoingCall = useCallStore((s) => s.setOutgoingCall);
+
+  // FIX (issue 2 — minimized call bubble + Contacts): pehle is screen ko
+  // bilkul pata hi nahi hota tha ke koi call already chal rahi hai (chahe
+  // full-screen ho ya minimized bubble). Is wajah se user Support → Contacts
+  // jaisi navigation ke baad bhi "Call" button dabata reh sakta tha, jo ek
+  // dusra /api/call/invite fire kar deta - ongoing call ke sath conflict.
+  // Ab activeCall ko yahan bhi read karte hain: jab tak koi call chal rahi
+  // hai, poori list disabled rehti hai aur upar ek banner dikhta hai jisse
+  // seedha wapas call par ja sakte hain (WhatsApp/Zoom jaisa behavior).
+  const activeCall = useCallStore((s) => s.activeCall);
+  const setCallMinimized = useCallStore((s) => s.setCallMinimized);
+  const isOnCall = !!activeCall;
 
   devLog("[Contacts] SCREEN MOUNTED, user.xnid:", myXnid, "user.email:", user?.email);
 
@@ -84,6 +104,19 @@ export default function CallContactsScreen() {
   }
 
   async function handleCall(customer: Customer) {
+    // FIX (issue 2): agar ek call already active hai (full-screen ya
+    // minimized), naya invite bilkul shuru mat karo - user ko clearly
+    // batao aur unhe wapas apni chalti hui call par bhej do, taake wo
+    // confuse na hon ke unka tap kaam kyun nahi kar raha.
+    if (isOnCall) {
+      Toast.show({
+        type: "info",
+        text1: "You're already on a call",
+        text2: "Finish or return to your current call first.",
+      });
+      return;
+    }
+
     if (callInFlightRef.current) return;
     callInFlightRef.current = true;
     setCallingId(customer.id);
@@ -131,25 +164,20 @@ export default function CallContactsScreen() {
       }
 
       // Invite reached the backend — now show the caller a proper
-      // "Calling…/Ringing…" screen and wait for accept/decline/timeout,
-      // instead of jumping straight into the Jitsi WebView.
+      // "Calling…/Ringing…" screen and wait for accept/decline/timeout.
+      // FIX (full-screen bug): pehle yahan router.push({ pathname:
+      // "/(tabs)/call/calling", ... }) hota tha - jo screen ko Tabs ke
+      // andar, Header ke neeche render karta tha (screenshot mein wahi
+      // dikh raha tha). Ab koi navigation nahi - sirf setOutgoingCall()
+      // set karo, OutgoingCallOverlay ((tabs)/_layout.tsx mein mounted)
+      // khud hi Header sameet sab kuch cover karke full-screen upar aa
+      // jayega, automatically, kisi route ke bagair.
       setOutgoingCall({
         roomName,
         calleeXnid: customer.email,
         calleeName: `${customer.first_name} ${customer.last_name}`.trim(),
         callerXnid: String(user?.email),
         callerName: getDisplayName(),
-      });
-
-      router.push({
-        pathname: "/(tabs)/call/calling",
-        params: {
-          roomName,
-          calleeName: `${customer.first_name} ${customer.last_name}`.trim(),
-          calleeXnid: customer.email,
-          callerXnid: user?.email,
-          callerName: getDisplayName(),
-        },
       });
     } catch (err) {
       devLog("[Contacts] /api/call/invite EXCEPTION:", err);
@@ -170,12 +198,89 @@ export default function CallContactsScreen() {
         Call a Contact
       </Text>
 
+      {/* FIX (style): pehle ye ek flat, single-color "strip" thi (bilkul
+          simple bubble/line banner jaisi) - ab ek proper elevated white
+          card hai: shadow, rounded corners, avatar, live pulsing dot, aur
+          clear two-line hierarchy (name + "Tap to return") - jo baaqi app
+          ke card-based design se professionally match karta hai. */}
+      {isOnCall && (
+        <Pressable
+          onPress={() => setCallMinimized(false)}
+          style={{
+            flexDirection: "row",
+            alignItems: "center",
+            backgroundColor: "#fff",
+            borderRadius: 14,
+            paddingVertical: 12,
+            paddingHorizontal: 14,
+            marginBottom: 18,
+            shadowColor: "#000",
+            shadowOpacity: 0.1,
+            shadowRadius: 10,
+            shadowOffset: { width: 0, height: 4 },
+            elevation: 4,
+            borderWidth: 1,
+            borderColor: "#EEF2F7",
+          }}
+        >
+          <View
+            style={{
+              width: 42,
+              height: 42,
+              borderRadius: 21,
+              backgroundColor: Colors.PRIMARY,
+              alignItems: "center",
+              justifyContent: "center",
+              marginRight: 12,
+            }}
+          >
+            <Text style={{ color: "#fff", fontWeight: "700", fontSize: 15 }}>
+              {getInitials(activeCall?.calleeName ?? activeCall?.displayName ?? "")}
+            </Text>
+            <View
+              style={{
+                position: "absolute",
+                bottom: -1,
+                right: -1,
+                width: 12,
+                height: 12,
+                borderRadius: 6,
+                backgroundColor: "#22C55E",
+                borderWidth: 2,
+                borderColor: "#fff",
+              }}
+            />
+          </View>
+          <View style={{ flex: 1 }}>
+            <Text style={{ fontWeight: "700", color: "#111827", fontSize: 14 }}>
+              {activeCall?.calleeName || "Ongoing call"}
+            </Text>
+            <Text style={{ color: "#6B7280", fontSize: 12, marginTop: 2 }}>
+              Call in progress · Tap to return
+            </Text>
+          </View>
+          <View
+            style={{
+              width: 34,
+              height: 34,
+              borderRadius: 17,
+              backgroundColor: "#F3F4F6",
+              alignItems: "center",
+              justifyContent: "center",
+            }}
+          >
+            <Ionicons name="chevron-forward" size={18} color="#374151" />
+          </View>
+        </Pressable>
+      )}
+
       <TextInput
         value={search}
         onChangeText={setSearch}
         onSubmitEditing={() => fetchCustomers(search)}
         placeholder="Search by name or email"
         placeholderTextColor="#9CA3AF"
+        editable={!isOnCall}
         style={{
           backgroundColor: "#E8EEF8",
           borderRadius: 8,
@@ -184,6 +289,7 @@ export default function CallContactsScreen() {
           fontSize: 15,
           color: "#111827",
           marginBottom: 16,
+          opacity: isOnCall ? 0.5 : 1,
         }}
       />
 
@@ -202,6 +308,7 @@ export default function CallContactsScreen() {
                 paddingVertical: 12,
                 borderBottomWidth: 1,
                 borderBottomColor: "#E5E7EB",
+                opacity: isOnCall ? 0.5 : 1,
               }}
             >
               <View style={{ flex: 1, paddingRight: 12 }}>
@@ -215,13 +322,13 @@ export default function CallContactsScreen() {
 
               <Pressable
                 onPress={() => handleCall(item)}
-                disabled={callingId === item.id}
+                disabled={callingId === item.id || isOnCall}
                 style={{
                   backgroundColor: Colors.PRIMARY,
                   paddingHorizontal: 16,
                   paddingVertical: 8,
                   borderRadius: 8,
-                  opacity: callingId === item.id ? 0.6 : 1,
+                  opacity: callingId === item.id || isOnCall ? 0.5 : 1,
                 }}
               >
                 {callingId === item.id ? (

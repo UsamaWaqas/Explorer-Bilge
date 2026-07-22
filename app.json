@@ -9,7 +9,7 @@
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
     "ios": {
-      "supportsTablet": true,
+      "supportsTablet": false,
       "bundleIdentifier": "com.goarmit.app",
       "associatedDomains": [
         "applinks:aquamax-devstage.jove1.com"
@@ -17,7 +17,7 @@
       "infoPlist": {
         "ITSAppUsesNonExemptEncryption": false
       },
-      "buildNumber": "9"
+      "buildNumber": "14"
     },
     "android": {
       "package": "com.goarmit.app",

@@ -77,9 +77,7 @@ const CustomDropdown: React.FC<CustomDropdownProps> = ({
   const borderWidth = isOpen ? 2 : 1;
 
   return (
-   
     <View style={[{ marginTop: 0, marginBottom: compact ? 0 : 6 }, style]}>
-
       {/* Floating Label */}
       {!noFloatingLabel && (
         <Animated.Text
@@ -149,6 +147,7 @@ const CustomDropdown: React.FC<CustomDropdownProps> = ({
                 fontSize: compact ? 12 : 14,
               }}
               numberOfLines={1}
+              ellipsizeMode="tail"
             >
               {selectedItem!.label}
             </Text>
@@ -160,6 +159,7 @@ const CustomDropdown: React.FC<CustomDropdownProps> = ({
                 fontSize: compact ? 12 : 14,
               }}
               numberOfLines={1}
+              ellipsizeMode="tail"
             >
               {placeholder}
             </Text>
@@ -243,6 +243,8 @@ const CustomDropdown: React.FC<CustomDropdownProps> = ({
                       color: isSelected ? "#2563EB" : "#1F2937",
                       fontWeight: isSelected ? "600" : "400",
                     }}
+                    numberOfLines={1}
+                    ellipsizeMode="tail"
                   >
                     {item.label}
                   </Text>

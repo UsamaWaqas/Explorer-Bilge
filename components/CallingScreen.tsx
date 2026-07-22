@@ -3,9 +3,15 @@ import { Animated, Easing, Pressable, StyleSheet, Text, View } from "react-nativ
 import { Ionicons } from "@expo/vector-icons";
 import { Colors } from "../assets/Color";
 
+export type CallingVariant = "calling" | "busy" | "declined" | "no_answer";
+
 interface CallingScreenProps {
   calleeName: string;
   onCancel: () => void;
+  // NEW: jab caller ki call reject/busy/no-answer ho jaye, ye variant badal
+  // kar user ko turant meaningful status dikhata hai, chup-chaap screen
+  // change hone se pehle.
+  variant?: CallingVariant;
 }
 
 function getInitials(name: string) {
@@ -15,15 +21,34 @@ function getInitials(name: string) {
   return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
 }
 
-// Native, phone-call-jaisi "Calling..." screen. Jab tak dusra banda Accept
-// ya Decline na kare, user ko seedha Jitsi WebView ke "Connecting..." mein
-// nahi dhakelte — is se call "loading atki hui" ke bajaye "ring ho rahi hai"
-// jaisi mehsoos hoti hai, jaisa normal phone calls mein hota hai.
-export function CallingScreen({ calleeName, onCancel }: CallingScreenProps) {
+const VARIANT_TEXT: Record<CallingVariant, { status: string; subtitle: string }> = {
+  calling: { status: "Calling…", subtitle: "Ringing…" },
+  busy: { status: "Unavailable", subtitle: "User is on another call" },
+  declined: { status: "Call Declined", subtitle: "They declined your call" },
+  no_answer: { status: "No Answer", subtitle: "They did not pick up" },
+};
+
+// FIX (professional polish for end states): pehle busy/declined/no_answer
+// teeno sirf plain text se differentiate hote the (status + subtitle) - koi
+// visual/iconography difference nahi thi, is liye teeno "same generic screen
+// bas different words" jaisi lagti thi. Ab avatar ke corner par ek chhota,
+// color-coded icon badge bhi hai jo pehli nazar mein hi batata hai ke exactly
+// kya hua - real phone call-log jaisa (missed call = clock, declined = red X,
+// busy = amber slash).
+const VARIANT_BADGE: Record<CallingVariant, { icon: keyof typeof Ionicons.glyphMap; color: string } | null> = {
+  calling: null,
+  busy: { icon: "remove-circle", color: "#F59E0B" },
+  declined: { icon: "close-circle", color: "#E53935" },
+  no_answer: { icon: "time", color: "#6B7280" },
+};
+
+export function CallingScreen({ calleeName, onCancel, variant = "calling" }: CallingScreenProps) {
   const pulse1 = useRef(new Animated.Value(0)).current;
   const pulse2 = useRef(new Animated.Value(0)).current;
+  const isRinging = variant === "calling";
 
   useEffect(() => {
+    if (!isRinging) return;
     const makeLoop = (val: Animated.Value, delay: number) =>
       Animated.loop(
         Animated.sequence([
@@ -46,7 +71,7 @@ export function CallingScreen({ calleeName, onCancel }: CallingScreenProps) {
       l1.stop();
       l2.stop();
     };
-  }, [pulse1, pulse2]);
+  }, [pulse1, pulse2, isRinging]);
 
   const ringStyle = (val: Animated.Value) => ({
     opacity: val.interpolate({ inputRange: [0, 1], outputRange: [0.5, 0] }),
@@ -55,28 +80,41 @@ export function CallingScreen({ calleeName, onCancel }: CallingScreenProps) {
     ],
   });
 
+  const { status, subtitle } = VARIANT_TEXT[variant];
+  const badge = VARIANT_BADGE[variant];
+  const avatarColor = isRinging ? Colors.PRIMARY : "#6B7280";
+
   return (
     <View style={styles.container}>
       <View style={styles.top}>
-        <Text style={styles.status}>Calling…</Text>
+        <Text style={styles.status}>{status}</Text>
 
         <View style={styles.avatarWrap}>
-          <Animated.View style={[styles.ring, ringStyle(pulse1)]} />
-          <Animated.View style={[styles.ring, ringStyle(pulse2)]} />
-          <View style={styles.avatar}>
+          {isRinging && (
+            <>
+              <Animated.View style={[styles.ring, ringStyle(pulse1)]} />
+              <Animated.View style={[styles.ring, ringStyle(pulse2)]} />
+            </>
+          )}
+          <View style={[styles.avatar, { backgroundColor: avatarColor }]}>
             <Text style={styles.avatarText}>{getInitials(calleeName)}</Text>
           </View>
+          {badge && (
+            <View style={[styles.badge, { backgroundColor: badge.color }]}>
+              <Ionicons name={badge.icon} size={16} color="#fff" />
+            </View>
+          )}
         </View>
 
         <Text style={styles.name}>{calleeName}</Text>
-        <Text style={styles.subtitle}>Ringing…</Text>
+        <Text style={styles.subtitle}>{subtitle}</Text>
       </View>
 
       <View style={styles.bottom}>
         <Pressable style={styles.cancelButton} onPress={onCancel} hitSlop={12}>
           <Ionicons name="call" size={28} color="#fff" style={{ transform: [{ rotate: "135deg" }] }} />
         </Pressable>
-        <Text style={styles.cancelLabel}>Cancel</Text>
+        <Text style={styles.cancelLabel}>{isRinging ? "Cancel" : "Close"}</Text>
       </View>
     </View>
   );
@@ -117,11 +155,22 @@ const styles = StyleSheet.create({
     width: 110,
     height: 110,
     borderRadius: 55,
-    backgroundColor: Colors.PRIMARY,
     alignItems: "center",
     justifyContent: "center",
   },
   avatarText: { color: "#fff", fontSize: 40, fontWeight: "700" },
+  badge: {
+    position: "absolute",
+    bottom: 4,
+    right: 4,
+    width: 28,
+    height: 28,
+    borderRadius: 14,
+    alignItems: "center",
+    justifyContent: "center",
+    borderWidth: 2,
+    borderColor: "#0B1220",
+  },
   name: { color: "#fff", fontSize: 24, fontWeight: "700", marginTop: 4 },
   subtitle: { color: "#9CA3AF", fontSize: 15, marginTop: 6 },
   bottom: { alignItems: "center" },
