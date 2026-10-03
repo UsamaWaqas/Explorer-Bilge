@@ -56,4 +56,4 @@ logs/
 
 # Editor               ← ADD
 .vscode/
-.idea/
+.idea/google-services.json
